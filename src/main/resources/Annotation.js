@@ -649,8 +649,7 @@
     }
 
     Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
-      getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator,
-                                                                     task) {
+      getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator, task) {
         if (this.appearance) {
           return Annotation.prototype.getOperatorList.call(this, evaluator, task);
         }

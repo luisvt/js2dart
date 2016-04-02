@@ -6,8 +6,9 @@ import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.ParseTreeListener
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
+
+import static java.lang.Character.isUpperCase
 
 class Js2Dart {
 
@@ -68,18 +69,18 @@ class Js2DartListener extends ECMAScriptBaseListener {
     @Override
     void enterLogicalOrExpression(ECMAScriptParser.LogicalOrExpressionContext ctx) {
         print "or("
-        walker.walk(this, ctx.singleExpression(0))
+        walk(ctx.singleExpression(0))
         print ","
-        walker.walk(this, ctx.singleExpression(1))
+        walk(ctx.singleExpression(1))
         print ")"
     }
 
     @Override
     void enterLogicalAndExpression(ECMAScriptParser.LogicalAndExpressionContext ctx) {
         print "and("
-        walker.walk(this, ctx.singleExpression(0))
+        walk(ctx.singleExpression(0))
         print ","
-        walker.walk(this, ctx.singleExpression(1))
+        walk(ctx.singleExpression(1))
         print ")"
     }
 
@@ -87,20 +88,144 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterEqualityExpression(ECMAScriptParser.EqualityExpressionContext ctx) {
         def operation = ctx.getChild(1).text
 
-        walker.walk(this, ctx.singleExpression(0))
+        walk(ctx.singleExpression(0))
 
 
         print ' ' + (operation == '===' ?
                 '==' : operation == '!==' ?
                 '!=' : operation)
 
-        walker.walk(this, ctx.singleExpression(1))
+        walk(ctx.singleExpression(1))
     }
 
+    @Override
+    void enterLiteralExpression(ECMAScriptParser.LiteralExpressionContext ctx) {
+        def regexLiteral = ctx.literal().RegularExpressionLiteral()
+        if (regexLiteral != null) {
+            walker.lastVisitedNodeIndex = ctx.start.tokenIndex
+            print "new RegExp(r'${regexLiteral.text.substring(1, regexLiteral.text.length() - 1)}')"
+        }
+    }
+
+    @Override
+    void enterMemberDotExpression(ECMAScriptParser.MemberDotExpressionContext ctx) {
+        if (ctx.identifierName().text == 'push') {
+            walk(ctx.singleExpression())
+            print '.add'
+            walker.lastVisitedNodeIndex = ctx.identifierName().start.tokenIndex
+        }
+    }
+
+    @Override
+    void enterArgumentsExpression(ECMAScriptParser.ArgumentsExpressionContext ctx) {
+        def singleExpression = ctx.singleExpression()
+        if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
+                singleExpression.identifierName().text == 'slice') {
+            print 'slice('
+            walk(singleExpression.singleExpression())
+            print ', '
+            walk(ctx.arguments().argumentList())
+            print ')'
+        } else if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
+                singleExpression.identifierName().text == 'splice') {
+            print 'splice('
+            walk(singleExpression.singleExpression())
+            print ', '
+            walk(ctx.arguments().argumentList())
+            print ')'
+        }
+    }
+
+    boolean isInsideClass
+
+    @Override
+    void enterVariableStatement(ECMAScriptParser.VariableStatementContext ctx) {
+        def variableDeclaration = ctx.variableDeclarationList().variableDeclaration(0)
+        def className = variableDeclaration.Identifier().text
+
+        def initialiserExpression = variableDeclaration.initialiser()?.singleExpression()
+
+        if (isUpperCase(className.charAt(0)) && initialiserExpression instanceof ECMAScriptParser.ArgumentsExpressionContext) {
+            isInsideClass = true
+            print "class $className {"
+            walk(
+                    ((ECMAScriptParser.FunctionExpressionContext)
+                            ((ECMAScriptParser.ParenthesizedExpressionContext)
+                                    initialiserExpression.singleExpression()).expressionSequence().singleExpression(0)).functionBody())
+            print "\n}"
+            walker.lastVisitedNodeIndex = ctx.eos().start.tokenIndex
+            isInsideClass = false
+        }
+    }
+
+    boolean isInsideClassPrototype
+
+    @Override
+    void enterAssignmentExpression(ECMAScriptParser.AssignmentExpressionContext ctx) {
+        def expression0 = ctx.singleExpression(0)
+        def expression1 = ctx.singleExpression(1)
+        if (isInsideClass &&
+                expression0 instanceof ECMAScriptParser.MemberDotExpressionContext &&
+                expression0.identifierName().text == 'prototype' &&
+                expression1 instanceof ECMAScriptParser.ObjectLiteralExpressionContext
+        ) {
+            isInsideClassPrototype = true
+            walk(expression1.objectLiteral().propertyNameAndValueList())
+            isInsideClassPrototype = false
+        }
+    }
+
+    @Override
+    void enterPropertyNameAndValueList(ECMAScriptParser.PropertyNameAndValueListContext ctx) {
+        if(isInsideClassPrototype) {
+            for(def propertyAssignment : ctx.propertyAssignment()) {
+                walk(propertyAssignment)
+            }
+        }
+    }
+
+    @Override
+    void enterPropertyExpressionAssignment(ECMAScriptParser.PropertyExpressionAssignmentContext ctx) {
+        def expression = ctx.singleExpression()
+        if(isInsideClassPrototype && expression instanceof ECMAScriptParser.FunctionExpressionContext) {
+            walk(ctx.propertyName())
+            print '('
+            walk(expression.formalParameterList())
+            print ') {'
+            walk(expression.functionBody())
+            walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+            visitTerminal(((TerminalNode) expression.children.last()))
+        }
+    }
+
+    @Override
+    void enterPropertyGetter(ECMAScriptParser.PropertyGetterContext ctx) {
+        walk(ctx.getter())
+        print ' {'
+        walk(ctx.functionBody())
+        walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+        visitTerminal(((TerminalNode) ctx.children.last()))
+    }
+
+    void walk(ParseTree t) {
+        walker.walk(this, t)
+    }
+
+    @Override
+    void enterFunctionDeclaration(ECMAScriptParser.FunctionDeclarationContext ctx) {
+        walk(ctx.Identifier())
+        print '('
+        walk(ctx.formalParameterList())
+        print ') {'
+        walk(ctx.functionBody())
+        walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+        visitTerminal((TerminalNode) ctx.children.last())
+    }
     int lastVisitedNodeIndex
+
     @Override
     void enterEveryRule(ParserRuleContext ctx) {
-        if(lastVisitedNodeIndex >= ctx.start.tokenIndex) return
+        if (lastVisitedNodeIndex >= ctx.start.tokenIndex) return
 
         lastVisitedNodeIndex = ctx.start.tokenIndex
         def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(ctx.start.tokenIndex, ECMAScriptLexer.HIDDEN);
