@@ -66,6 +66,32 @@ class Js2DartListener extends ECMAScriptBaseListener {
         this.walker = walker
     }
 
+    private int _lastVisitedNodeIndex
+
+    @Override
+    void enterEveryRule(ParserRuleContext ctx) {
+        if (_lastVisitedNodeIndex >= ctx.start.tokenIndex) return
+
+        _lastVisitedNodeIndex = ctx.start.tokenIndex
+        def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(ctx.start.tokenIndex, ECMAScriptLexer.HIDDEN);
+        hiddenTokensToLeft.each { print it.text }
+    }
+
+    private void _visitTerminal(ParseTree node) {
+        visitTerminal((TerminalNode) node)
+    }
+
+    @Override
+    void visitTerminal(TerminalNode node) {
+
+        if (_lastVisitedNodeIndex < node.symbol.tokenIndex) {
+            def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(node.symbol.tokenIndex, ECMAScriptLexer.HIDDEN);
+            hiddenTokensToLeft.each { print it.text }
+        }
+
+        print node
+    }
+
     @Override
     void enterLogicalOrExpression(ECMAScriptParser.LogicalOrExpressionContext ctx) {
         print "or("
@@ -194,7 +220,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
             print ') {'
             _walk(expression.functionBody())
             walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
-            visitTerminal(((TerminalNode) expression.children.last()))
+            _visitTerminal(expression.children.last())
         }
     }
 
@@ -204,7 +230,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
         print ' {'
         _walk(ctx.functionBody())
         walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
-        visitTerminal(((TerminalNode) ctx.children.last()))
+        _visitTerminal(ctx.children.last())
     }
 
     private void _walk(ParseTree t) {
@@ -219,28 +245,6 @@ class Js2DartListener extends ECMAScriptBaseListener {
         print ') {'
         _walk(ctx.functionBody())
         walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
-        visitTerminal((TerminalNode) ctx.children.last())
-    }
-    int lastVisitedNodeIndex
-
-    @Override
-    void enterEveryRule(ParserRuleContext ctx) {
-        if (lastVisitedNodeIndex >= ctx.start.tokenIndex) return
-
-        lastVisitedNodeIndex = ctx.start.tokenIndex
-        def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(ctx.start.tokenIndex, ECMAScriptLexer.HIDDEN);
-        hiddenTokensToLeft.each { print it.text }
-    }
-
-
-    @Override
-    void visitTerminal(TerminalNode node) {
-
-        if (lastVisitedNodeIndex < node.symbol.tokenIndex) {
-            def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(node.symbol.tokenIndex, ECMAScriptLexer.HIDDEN);
-            hiddenTokensToLeft.each { print it.text }
-        }
-
-        print node
+        _visitTerminal(ctx.children.last())
     }
 }
