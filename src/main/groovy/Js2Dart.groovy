@@ -69,18 +69,18 @@ class Js2DartListener extends ECMAScriptBaseListener {
     @Override
     void enterLogicalOrExpression(ECMAScriptParser.LogicalOrExpressionContext ctx) {
         print "or("
-        walk(ctx.singleExpression(0))
+        _walk(ctx.singleExpression(0))
         print ","
-        walk(ctx.singleExpression(1))
+        _walk(ctx.singleExpression(1))
         print ")"
     }
 
     @Override
     void enterLogicalAndExpression(ECMAScriptParser.LogicalAndExpressionContext ctx) {
         print "and("
-        walk(ctx.singleExpression(0))
+        _walk(ctx.singleExpression(0))
         print ","
-        walk(ctx.singleExpression(1))
+        _walk(ctx.singleExpression(1))
         print ")"
     }
 
@@ -88,14 +88,14 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterEqualityExpression(ECMAScriptParser.EqualityExpressionContext ctx) {
         def operation = ctx.getChild(1).text
 
-        walk(ctx.singleExpression(0))
+        _walk(ctx.singleExpression(0))
 
 
         print ' ' + (operation == '===' ?
                 '==' : operation == '!==' ?
                 '!=' : operation)
 
-        walk(ctx.singleExpression(1))
+        _walk(ctx.singleExpression(1))
     }
 
     @Override
@@ -110,7 +110,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
     @Override
     void enterMemberDotExpression(ECMAScriptParser.MemberDotExpressionContext ctx) {
         if (ctx.identifierName().text == 'push') {
-            walk(ctx.singleExpression())
+            _walk(ctx.singleExpression())
             print '.add'
             walker.lastVisitedNodeIndex = ctx.identifierName().start.tokenIndex
         }
@@ -122,16 +122,16 @@ class Js2DartListener extends ECMAScriptBaseListener {
         if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
                 singleExpression.identifierName().text == 'slice') {
             print 'slice('
-            walk(singleExpression.singleExpression())
+            _walk(singleExpression.singleExpression())
             print ', '
-            walk(ctx.arguments().argumentList())
+            _walk(ctx.arguments().argumentList())
             print ')'
         } else if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
                 singleExpression.identifierName().text == 'splice') {
             print 'splice('
-            walk(singleExpression.singleExpression())
+            _walk(singleExpression.singleExpression())
             print ', '
-            walk(ctx.arguments().argumentList())
+            _walk(ctx.arguments().argumentList())
             print ')'
         }
     }
@@ -148,7 +148,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
         if (isUpperCase(className.charAt(0)) && initialiserExpression instanceof ECMAScriptParser.ArgumentsExpressionContext) {
             isInsideClass = true
             print "class $className {"
-            walk(
+            _walk(
                     ((ECMAScriptParser.FunctionExpressionContext)
                             ((ECMAScriptParser.ParenthesizedExpressionContext)
                                     initialiserExpression.singleExpression()).expressionSequence().singleExpression(0)).functionBody())
@@ -170,7 +170,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
                 expression1 instanceof ECMAScriptParser.ObjectLiteralExpressionContext
         ) {
             isInsideClassPrototype = true
-            walk(expression1.objectLiteral().propertyNameAndValueList())
+            _walk(expression1.objectLiteral().propertyNameAndValueList())
             isInsideClassPrototype = false
         }
     }
@@ -179,7 +179,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterPropertyNameAndValueList(ECMAScriptParser.PropertyNameAndValueListContext ctx) {
         if(isInsideClassPrototype) {
             for(def propertyAssignment : ctx.propertyAssignment()) {
-                walk(propertyAssignment)
+                _walk(propertyAssignment)
             }
         }
     }
@@ -188,11 +188,11 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterPropertyExpressionAssignment(ECMAScriptParser.PropertyExpressionAssignmentContext ctx) {
         def expression = ctx.singleExpression()
         if(isInsideClassPrototype && expression instanceof ECMAScriptParser.FunctionExpressionContext) {
-            walk(ctx.propertyName())
+            _walk(ctx.propertyName())
             print '('
-            walk(expression.formalParameterList())
+            _walk(expression.formalParameterList())
             print ') {'
-            walk(expression.functionBody())
+            _walk(expression.functionBody())
             walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
             visitTerminal(((TerminalNode) expression.children.last()))
         }
@@ -200,24 +200,24 @@ class Js2DartListener extends ECMAScriptBaseListener {
 
     @Override
     void enterPropertyGetter(ECMAScriptParser.PropertyGetterContext ctx) {
-        walk(ctx.getter())
+        _walk(ctx.getter())
         print ' {'
-        walk(ctx.functionBody())
+        _walk(ctx.functionBody())
         walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
         visitTerminal(((TerminalNode) ctx.children.last()))
     }
 
-    void walk(ParseTree t) {
+    private void _walk(ParseTree t) {
         walker.walk(this, t)
     }
 
     @Override
     void enterFunctionDeclaration(ECMAScriptParser.FunctionDeclarationContext ctx) {
-        walk(ctx.Identifier())
+        _walk(ctx.Identifier())
         print '('
-        walk(ctx.formalParameterList())
+        _walk(ctx.formalParameterList())
         print ') {'
-        walk(ctx.functionBody())
+        _walk(ctx.functionBody())
         walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
         visitTerminal((TerminalNode) ctx.children.last())
     }
