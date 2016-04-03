@@ -1,12 +1,12 @@
+import ECMAScriptParser.ArgumentsExpressionContext
+import ECMAScriptParser.EqualityExpressionContext
+import ECMAScriptParser.LiteralExpressionContext
+import ECMAScriptParser.LogicalAndExpressionContext
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.BufferedTokenStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.tree.ErrorNode
-import org.antlr.v4.runtime.tree.ParseTree
-import org.antlr.v4.runtime.tree.ParseTreeListener
-import org.antlr.v4.runtime.tree.ParseTreeWalker
-import org.antlr.v4.runtime.tree.TerminalNode
+import org.antlr.v4.runtime.tree.*
 
 import static java.lang.Character.isUpperCase
 
@@ -29,6 +29,8 @@ class Js2Dart {
         def walker = new CustomParserTreeWalker() // create standard walker
         def extractor = new Js2DartListener(parser, tokens, walker)
         walker.walk(extractor, tree) // initiate walk of tree with listener
+
+        print extractor.dartSrc
     }
 }
 
@@ -56,9 +58,11 @@ class CustomParserTreeWalker extends ParseTreeWalker {
 }
 
 class Js2DartListener extends ECMAScriptBaseListener {
+    String dartSrc = ''
     private ECMAScriptParser parser
     private BufferedTokenStream tokens
     private CustomParserTreeWalker walker
+    boolean isInsideSmallClass
 
     Js2DartListener(ECMAScriptParser parser, BufferedTokenStream tokens, CustomParserTreeWalker walker) {
         this.parser = parser
@@ -74,7 +78,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
 
         _lastVisitedNodeIndex = ctx.start.tokenIndex
         def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(ctx.start.tokenIndex, ECMAScriptLexer.HIDDEN);
-        hiddenTokensToLeft.each { print it.text }
+        hiddenTokensToLeft.each { dartSrc += it.text }
     }
 
     private void _visitTerminal(ParseTree node) {
@@ -86,50 +90,65 @@ class Js2DartListener extends ECMAScriptBaseListener {
 
         if (_lastVisitedNodeIndex < node.symbol.tokenIndex) {
             def hiddenTokensToLeft = tokens.getHiddenTokensToLeft(node.symbol.tokenIndex, ECMAScriptLexer.HIDDEN);
-            hiddenTokensToLeft.each { print it.text }
+            hiddenTokensToLeft.each { dartSrc += it.text }
         }
 
-        print node
+        dartSrc += node
     }
 
     @Override
     void enterLogicalOrExpression(ECMAScriptParser.LogicalOrExpressionContext ctx) {
-        print "or("
+        dartSrc += "or("
         _walk(ctx.singleExpression(0))
-        print ","
+        dartSrc += ","
         _walk(ctx.singleExpression(1))
-        print ")"
+        dartSrc += ")"
     }
 
     @Override
-    void enterLogicalAndExpression(ECMAScriptParser.LogicalAndExpressionContext ctx) {
-        print "and("
+    void enterLogicalAndExpression(LogicalAndExpressionContext ctx) {
+        dartSrc += "and("
         _walk(ctx.singleExpression(0))
-        print ","
+        dartSrc += ","
         _walk(ctx.singleExpression(1))
-        print ")"
+        dartSrc += ")"
     }
 
     @Override
-    void enterEqualityExpression(ECMAScriptParser.EqualityExpressionContext ctx) {
-        def operation = ctx.getChild(1).text
+    void enterEqualityExpression(EqualityExpressionContext ctx) {
+        def expression0 = ctx.singleExpression(0)
+        def expression1 = ctx.singleExpression(1)
 
-        _walk(ctx.singleExpression(0))
+        if(expression0 instanceof ECMAScriptParser.TypeofExpressionContext) {
+            _walk(expression0.singleExpression())
+
+            def typeExpression = expression1.text
+            if(typeExpression == "'undefined'") {
+                dartSrc += ' == null'
+            } else {
+                dartSrc += " is ${typeExpression.substring(1, typeExpression.length() - 1)}"
+            }
+            walker.lastVisitedNodeIndex = expression1.stop.tokenIndex
+        } else {
+            def operation = ctx.getChild(1).text
+
+            _walk(expression0)
 
 
-        print ' ' + (operation == '===' ?
-                '==' : operation == '!==' ?
-                '!=' : operation)
+            dartSrc += ' ' + (operation == '===' ?
+                    '==' : operation == '!==' ?
+                    '!=' : operation)
 
-        _walk(ctx.singleExpression(1))
+            _walk(expression1)
+        }
     }
 
     @Override
-    void enterLiteralExpression(ECMAScriptParser.LiteralExpressionContext ctx) {
+    void enterLiteralExpression(LiteralExpressionContext ctx) {
         def regexLiteral = ctx.literal().RegularExpressionLiteral()
         if (regexLiteral != null) {
             walker.lastVisitedNodeIndex = ctx.start.tokenIndex
-            print "new RegExp(r'${regexLiteral.text.substring(1, regexLiteral.text.length() - 1)}')"
+            dartSrc += "new RegExp(r'${regexLiteral.text.substring(1, regexLiteral.text.length() - 1)}')"
         }
     }
 
@@ -137,32 +156,54 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterMemberDotExpression(ECMAScriptParser.MemberDotExpressionContext ctx) {
         if (ctx.identifierName().text == 'push') {
             _walk(ctx.singleExpression())
-            print '.add'
+            dartSrc += '.add'
             walker.lastVisitedNodeIndex = ctx.identifierName().start.tokenIndex
         }
     }
 
     @Override
-    void enterArgumentsExpression(ECMAScriptParser.ArgumentsExpressionContext ctx) {
+    void enterArgumentsExpression(ArgumentsExpressionContext ctx) {
         def singleExpression = ctx.singleExpression()
         if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
                 singleExpression.identifierName().text == 'slice') {
-            print 'slice('
+            dartSrc += 'slice('
             _walk(singleExpression.singleExpression())
-            print ', '
+            dartSrc += ', '
             _walk(ctx.arguments().argumentList())
-            print ')'
+            dartSrc += ')'
         } else if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
                 singleExpression.identifierName().text == 'splice') {
-            print 'splice('
+            dartSrc += 'splice('
             _walk(singleExpression.singleExpression())
-            print ', '
+            dartSrc += ', '
             _walk(ctx.arguments().argumentList())
-            print ')'
+            dartSrc += ')'
+        } else if (ctx.text.startsWith('Util.inherit')) {
+            def mixin = ((ECMAScriptParser.ObjectLiteralExpressionContext) ctx.arguments().argumentList().singleExpression(2))
+            if (mixin != null)
+                _walk(mixin.objectLiteral().propertyNameAndValueList())
+
+            walker.lastVisitedNodeIndex = ctx.parent.parent.stop.tokenIndex
+        } else if (ctx.text.startsWith('define')) {
+            ((ECMAScriptParser.ElementListContext) ((ECMAScriptParser.ArrayLiteralContext) ctx.arguments().argumentList().singleExpression(1).children[0]).children[1]).singleExpression().each {
+                dartSrc += "import 'package:${it.text.substring(1, it.text.length() - 1)}.dart';\n"
+            }
+            walker.lastVisitedNodeIndex = ctx.parent.parent.stop.tokenIndex
+        } else if (ctx.text.startsWith('require')) {
+            dartSrc += "import ${ctx.arguments().argumentList().singleExpression(0).text.replace('.js', '.dart')};\n"
+            walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
         }
     }
 
+    @Override
+    void enterExpressionStatement(ECMAScriptParser.ExpressionStatementContext ctx) {
+        if (ctx.text == "'use strict';")
+            walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+    }
+
     boolean isInsideClass
+
+    ECMAScriptParser.FunctionBodyContext classBody
 
     @Override
     void enterVariableStatement(ECMAScriptParser.VariableStatementContext ctx) {
@@ -171,17 +212,39 @@ class Js2DartListener extends ECMAScriptBaseListener {
 
         def initialiserExpression = variableDeclaration.initialiser()?.singleExpression()
 
-        if (isUpperCase(className.charAt(0)) && initialiserExpression instanceof ECMAScriptParser.ArgumentsExpressionContext) {
+        if (isUpperCase(className.charAt(0)) && initialiserExpression instanceof ArgumentsExpressionContext) {
             isInsideClass = true
-            print "class $className {"
-            _walk(
-                    ((ECMAScriptParser.FunctionExpressionContext)
-                            ((ECMAScriptParser.ParenthesizedExpressionContext)
-                                    initialiserExpression.singleExpression()).expressionSequence().singleExpression(0)).functionBody())
-            print "\n}"
+            dartSrc += "class $className "
+            classBody = ((ECMAScriptParser.FunctionExpressionContext)
+                    ((ECMAScriptParser.ParenthesizedExpressionContext)
+                            initialiserExpression.singleExpression())
+                            .expressionSequence().singleExpression(0)).functionBody()
+
+            def extendsElement = classBody.sourceElements().sourceElement(classBody.sourceElements().childCount - 2)
+            if (extendsElement.text.startsWith("Util.inherit")) {
+                def classToExtend =
+                        ((ECMAScriptParser.ArgumentsContext) extendsElement
+                                .statement().expressionStatement().expressionSequence().singleExpression(0)
+                                .children[1])
+                                .argumentList()
+                                .singleExpression(1)
+
+                dartSrc += "extends ${classToExtend.text} "
+            }
+
+            dartSrc += '{'
+            _walk(classBody)
+            dartSrc += "\n}"
             walker.lastVisitedNodeIndex = ctx.eos().start.tokenIndex
             isInsideClass = false
+            classBody = null
         }
+    }
+
+    @Override
+    void enterReturnStatement(ECMAScriptParser.ReturnStatementContext ctx) {
+        if (isInsideClass && ctx.parent.parent.parent.parent == classBody)
+            walker.lastVisitedNodeIndex = ctx.eos().start.tokenIndex
     }
 
     boolean isInsideClassPrototype
@@ -190,7 +253,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterAssignmentExpression(ECMAScriptParser.AssignmentExpressionContext ctx) {
         def expression0 = ctx.singleExpression(0)
         def expression1 = ctx.singleExpression(1)
-        if (isInsideClass &&
+        if ((isInsideClass || isInsideSmallClass) &&
                 expression0 instanceof ECMAScriptParser.MemberDotExpressionContext &&
                 expression0.identifierName().text == 'prototype' &&
                 expression1 instanceof ECMAScriptParser.ObjectLiteralExpressionContext
@@ -198,26 +261,30 @@ class Js2DartListener extends ECMAScriptBaseListener {
             isInsideClassPrototype = true
             _walk(expression1.objectLiteral().propertyNameAndValueList())
             isInsideClassPrototype = false
+
+            if(isInsideSmallClass) {
+                dartSrc += "\n}\n"
+                isInsideSmallClass = false
+                walker.lastVisitedNodeIndex = ctx.parent.parent.stop.tokenIndex
+            }
         }
     }
 
     @Override
     void enterPropertyNameAndValueList(ECMAScriptParser.PropertyNameAndValueListContext ctx) {
         if(isInsideClassPrototype) {
-            for(def propertyAssignment : ctx.propertyAssignment()) {
-                _walk(propertyAssignment)
-            }
+            ctx.propertyAssignment().each { _walk(it) }
         }
     }
 
     @Override
     void enterPropertyExpressionAssignment(ECMAScriptParser.PropertyExpressionAssignmentContext ctx) {
         def expression = ctx.singleExpression()
-        if(isInsideClassPrototype && expression instanceof ECMAScriptParser.FunctionExpressionContext) {
+        if (isInsideClassPrototype && expression instanceof ECMAScriptParser.FunctionExpressionContext) {
             _walk(ctx.propertyName())
-            print '('
+            dartSrc += '('
             _walk(expression.formalParameterList())
-            print ') {'
+            dartSrc += ') {'
             _walk(expression.functionBody())
             walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
             _visitTerminal(expression.children.last())
@@ -227,7 +294,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
     @Override
     void enterPropertyGetter(ECMAScriptParser.PropertyGetterContext ctx) {
         _walk(ctx.getter())
-        print ' {'
+        dartSrc += ' {'
         _walk(ctx.functionBody())
         walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
         _visitTerminal(ctx.children.last())
@@ -239,12 +306,27 @@ class Js2DartListener extends ECMAScriptBaseListener {
 
     @Override
     void enterFunctionDeclaration(ECMAScriptParser.FunctionDeclarationContext ctx) {
-        _walk(ctx.Identifier())
-        print '('
-        _walk(ctx.formalParameterList())
-        print ') {'
-        _walk(ctx.functionBody())
-        walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
-        _visitTerminal(ctx.children.last())
+        def className = ctx.Identifier().text
+        if(!isInsideClass && isUpperCase(className.charAt(0))) {
+            dartSrc += "class ${className} {\n" +
+                    "${className}("
+            _walk(ctx.formalParameterList())
+            dartSrc += ") {"
+            _walk(ctx.functionBody())
+            _walk(ctx.children.last())
+
+            isInsideSmallClass = true
+
+
+        } else {
+            walker.lastVisitedNodeIndex = ctx.Function().symbol.tokenIndex
+        }
     }
+
+    @Override
+    void enterFunctionExpression(ECMAScriptParser.FunctionExpressionContext ctx) {
+        walker.lastVisitedNodeIndex = ctx.Function().symbol.tokenIndex
+    }
+
+    //Todo: shift, unshift, and super calls, static methods
 }

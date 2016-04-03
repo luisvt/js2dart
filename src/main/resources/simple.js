@@ -1,3 +1,5 @@
+'use strict';
+
 var Apple = (function () {
   function Apple() {
   }
@@ -14,14 +16,35 @@ var Apple = (function () {
         this.flags = 0;
       }
     }
-  }
+  };
+
+  return Apple;
 })();
+
+if(typeof 37 === "number") {
+
+}
 
 var re = /ab+c/;
 
 function Person() {
 
 }
+
+Person.prototype = {
+  get name() {
+    return 'luis';
+  },
+
+  set name(name) {
+
+  },
+
+  age: function () {
+
+  }
+
+};
 
 var apples = [];
 
