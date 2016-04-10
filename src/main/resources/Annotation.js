@@ -30,7 +30,7 @@
       require('../shared/util.js'),
       require('./primitives.js'),
       require('./stream.js'),
-      require('./colorspace.js'),
+      require('./colorspaces.js'),
       require('./obj.js'),
       require('./evaluator.js'));
   } else {

@@ -1,3 +1,7 @@
+arr.slice();
+
+Array.prototype.push.apply(arr1, arr2);
+
 'use strict';
 
 var Apple = (function () {
@@ -17,6 +21,12 @@ var Apple = (function () {
       }
     }
   };
+
+  Util.inherit(AppleExt, Apple, {
+    getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator, task) {
+
+    }
+  });
 
   return Apple;
 })();
@@ -51,6 +61,11 @@ var apples = [];
 //comment
 apples.splice(4, 5);
 
+apples.push(3);
+
 //comment
 3 === 4 || 3 !== 5;
+
+var a = apple || {};
+
 

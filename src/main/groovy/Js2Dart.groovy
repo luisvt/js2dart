@@ -2,6 +2,20 @@ import ECMAScriptParser.ArgumentsExpressionContext
 import ECMAScriptParser.EqualityExpressionContext
 import ECMAScriptParser.LiteralExpressionContext
 import ECMAScriptParser.LogicalAndExpressionContext
+import ECMAScriptParser.LogicalOrExpressionContext
+import ECMAScriptParser.RelationalExpressionContext
+import ECMAScriptParser.InstanceofExpressionContext
+import ECMAScriptParser.NotExpressionContext
+import ECMAScriptParser.ThisExpressionContext
+import ECMAScriptParser.IdentifierExpressionContext
+import ECMAScriptParser.LiteralExpressionContext
+import ECMAScriptParser.ArrayLiteralExpressionContext
+import ECMAScriptParser.MemberIndexExpressionContext
+import ECMAScriptParser.FunctionExpressionContext
+import ECMAScriptParser.ObjectLiteralExpressionContext
+import ECMAScriptParser.MemberDotExpressionContext
+import ECMAScriptParser.ParenthesizedExpressionContext
+import ECMAScriptParser.TypeofExpressionContext
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.BufferedTokenStream
 import org.antlr.v4.runtime.CommonTokenStream
@@ -63,6 +77,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
     private BufferedTokenStream tokens
     private CustomParserTreeWalker walker
     boolean isInsideSmallClass
+    boolean isInsideInheritMixin
 
     Js2DartListener(ECMAScriptParser parser, BufferedTokenStream tokens, CustomParserTreeWalker walker) {
         this.parser = parser
@@ -97,21 +112,32 @@ class Js2DartListener extends ECMAScriptBaseListener {
     }
 
     @Override
-    void enterLogicalOrExpression(ECMAScriptParser.LogicalOrExpressionContext ctx) {
-        dartSrc += "or("
-        _walk(ctx.singleExpression(0))
-        dartSrc += ","
-        _walk(ctx.singleExpression(1))
-        dartSrc += ")"
+    void enterLogicalOrExpression(LogicalOrExpressionContext ctx) {
+        def expression0 = ctx.singleExpression(0)
+        def expression1 = ctx.singleExpression(1)
+        if (isSimpleExpression(expression0)) {
+            dartSrc += "or("
+            _walk(expression0)
+            dartSrc += ","
+            _walk(expression1)
+            dartSrc += ")"
+        }
     }
 
+//    @Override
+//    void enterLogicalAndExpression(LogicalAndExpressionContext ctx) {
+//        dartSrc += "and("
+//        _walk(ctx.singleExpression(0))
+//        dartSrc += ","
+//        _walk(ctx.singleExpression(1))
+//        dartSrc += ")"
+//    }
+
     @Override
-    void enterLogicalAndExpression(LogicalAndExpressionContext ctx) {
-        dartSrc += "and("
-        _walk(ctx.singleExpression(0))
-        dartSrc += ","
+    void enterInExpression(ECMAScriptParser.InExpressionContext ctx) {
+//        if(ctx.singleExpression(1) instanceof )
         _walk(ctx.singleExpression(1))
-        dartSrc += ")"
+        dartSrc += ".containsKey(${ctx.singleExpression(0).text})"
     }
 
     @Override
@@ -119,16 +145,23 @@ class Js2DartListener extends ECMAScriptBaseListener {
         def expression0 = ctx.singleExpression(0)
         def expression1 = ctx.singleExpression(1)
 
-        if(expression0 instanceof ECMAScriptParser.TypeofExpressionContext) {
+        if (expression0 instanceof TypeofExpressionContext) {
             _walk(expression0.singleExpression())
 
-            def typeExpression = expression1.text
-            if(typeExpression == "'undefined'") {
+            def typeExpression = expression1.text.substring(1, expression1.text.length() - 1)
+            if (typeExpression == "undefined") {
                 dartSrc += ' == null'
             } else {
-                dartSrc += " is ${typeExpression.substring(1, typeExpression.length() - 1)}"
+                typeExpression = typeExpression == 'number' ?
+                        'num' : typeExpression == 'string' ?
+                        'String' : typeExpression == 'function' ?
+                        'Function' : typeExpression == 'object' ?
+                        'JsonObject' : typeExpression == 'Array' ?
+                        'List' : typeExpression == 'boolean' ?
+                        'bool' : typeExpression
+                dartSrc += " is ${typeExpression}"
             }
-            walker.lastVisitedNodeIndex = expression1.stop.tokenIndex
+            _setLastVisited expression1
         } else {
             def operation = ctx.getChild(1).text
 
@@ -153,70 +186,161 @@ class Js2DartListener extends ECMAScriptBaseListener {
     }
 
     @Override
-    void enterMemberDotExpression(ECMAScriptParser.MemberDotExpressionContext ctx) {
+    void enterIdentifierExpression(IdentifierExpressionContext ctx) {
+        if (ctx.text == 'Uint8Array') {
+            dartSrc += 'Uint8List'
+            _setLastVisited ctx
+        } else if (ctx.text == 'Uint16Array') {
+            dartSrc += 'Uint16List'
+            _setLastVisited ctx
+        } else if (ctx.text == 'Uint32Array') {
+            dartSrc += 'Uint32List'
+            _setLastVisited ctx
+        } else if (ctx.text == 'undefined') {
+            dartSrc += 'null'
+            _setLastVisited ctx
+        }
+    }
+
+    @Override
+    void enterMemberDotExpression(MemberDotExpressionContext ctx) {
+        def singleExpression = ctx.singleExpression()
         if (ctx.identifierName().text == 'push') {
-            _walk(ctx.singleExpression())
+            _walk singleExpression
             dartSrc += '.add'
-            walker.lastVisitedNodeIndex = ctx.identifierName().start.tokenIndex
+            _setLastVisited ctx.identifierName()
+        } else if (ctx.text == 'Promise.resolve') {
+            dartSrc += 'new Future.value'
+            _setLastVisited ctx
+        } else if (ctx.text == 'Promise.all') {
+            dartSrc += 'Future.wait'
+            _setLastVisited ctx
+        } else if(ctx.text == 'String.fromCharCode') {
+            dartSrc += 'new String.fromCharCode'
+            _setLastVisited ctx
+        } else if(ctx.text == 'String.fromCharCodes') {
+            dartSrc += 'new String.fromCharCodes'
+            _setLastVisited ctx
+        } else if(ctx.text == 'Date.now') {
+            dartSrc += 'new DateTime.now'
+            _setLastVisited ctx
+        } else if (ctx.text == 'console.log') {
+            dartSrc += 'print'
+            _setLastVisited ctx
         }
     }
 
     @Override
     void enterArgumentsExpression(ArgumentsExpressionContext ctx) {
         def singleExpression = ctx.singleExpression()
-        if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
-                singleExpression.identifierName().text == 'slice') {
-            dartSrc += 'slice('
-            _walk(singleExpression.singleExpression())
-            dartSrc += ', '
-            _walk(ctx.arguments().argumentList())
-            dartSrc += ')'
-        } else if (singleExpression instanceof ECMAScriptParser.MemberDotExpressionContext &&
-                singleExpression.identifierName().text == 'splice') {
-            dartSrc += 'splice('
-            _walk(singleExpression.singleExpression())
-            dartSrc += ', '
-            _walk(ctx.arguments().argumentList())
-            dartSrc += ')'
-        } else if (ctx.text.startsWith('Util.inherit')) {
-            def mixin = ((ECMAScriptParser.ObjectLiteralExpressionContext) ctx.arguments().argumentList().singleExpression(2))
-            if (mixin != null)
+        if (ctx.text.startsWith('Util.inherit')) {
+            def mixin = ((ObjectLiteralExpressionContext) ctx.arguments().argumentList().singleExpression(2))
+            if (mixin.objectLiteral().propertyNameAndValueList() != null) {
+                isInsideInheritMixin = true
                 _walk(mixin.objectLiteral().propertyNameAndValueList())
+                isInsideInheritMixin = false
+            }
 
-            walker.lastVisitedNodeIndex = ctx.parent.parent.stop.tokenIndex
+            _setLastVisited ctx.parent.parent
+        } else if (ctx.text == 'Object.create(null)') {
+            dartSrc += '{}';
+            _setLastVisited ctx
+        } else if (singleExpression instanceof MemberDotExpressionContext) {
+            def identifierNameText = singleExpression.identifierName().text
+            if (['slice', 'splice', 'unshift', 'shift', 'pop'].any { it == identifierNameText }) {
+                dartSrc += identifierNameText + '('
+                _walk(singleExpression.singleExpression())
+                dartSrc += ', '
+                if(ctx.arguments().argumentList() != null)
+                    _walk(ctx.arguments().argumentList())
+                else if (identifierNameText == 'slice'){
+                    dartSrc += '0'
+                    _setLastVisited ctx
+                }
+                dartSrc += ')'
+            } else if (identifierNameText == 'call') {
+                def methodExpression = singleExpression.singleExpression()
+                if (methodExpression instanceof MemberDotExpressionContext) {
+                    dartSrc += "super.${methodExpression.identifierName().text}("
+                    def argumentExpressions = ctx.arguments().argumentList().singleExpression()
+                    for (int i = 1; i < argumentExpressions.size(); i++) {
+                        _walk(argumentExpressions.get(i))
+                        if (i < argumentExpressions.size() - 1) {
+                            dartSrc += ","
+                        }
+                    }
+                    dartSrc += ')'
+                }
+            } else if (ctx.singleExpression().text == 'Math.abs') {
+                def expression0 = ctx.arguments().argumentList().singleExpression(0)
+                if (isSimpleExpression(expression0)) {
+                    dartSrc += "${expression0.text}.abs()"
+                    _setLastVisited ctx
+                } else {
+                    _walk ctx.arguments()
+                    dartSrc += '.abs()'
+                }
+            } else if (singleExpression.text == 'Array.prototype.push.apply') {
+                _walk ctx.arguments().argumentList().singleExpression(0)
+                dartSrc += '.addAll('
+                _walk ctx.arguments().argumentList().singleExpression(1)
+                dartSrc += ')'
+                _setLastVisited ctx
+            } else if (singleExpression.text == 'Array.prototype.unshift.apply') {
+                _walk ctx.arguments().argumentList().singleExpression(0)
+                dartSrc += '.insertAll(0,'
+                _walk ctx.arguments().argumentList().singleExpression(1)
+                dartSrc += ')'
+                _setLastVisited ctx
+            }
         } else if (ctx.text.startsWith('define')) {
             ((ECMAScriptParser.ElementListContext) ((ECMAScriptParser.ArrayLiteralContext) ctx.arguments().argumentList().singleExpression(1).children[0]).children[1]).singleExpression().each {
                 dartSrc += "import 'package:${it.text.substring(1, it.text.length() - 1)}.dart';\n"
             }
-            walker.lastVisitedNodeIndex = ctx.parent.parent.stop.tokenIndex
+            _setLastVisited ctx.parent.parent
         } else if (ctx.text.startsWith('require')) {
             dartSrc += "import ${ctx.arguments().argumentList().singleExpression(0).text.replace('.js', '.dart')};\n"
-            walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+            _setLastVisited ctx
         }
+    }
+
+    private void _setLastVisited(ParserRuleContext ctx) {
+        walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+    }
+
+    private static boolean isSimpleExpression(ECMAScriptParser.SingleExpressionContext expression) {
+        expression instanceof LiteralExpressionContext ||
+                expression instanceof ThisExpressionContext ||
+                expression instanceof IdentifierExpressionContext ||
+                expression instanceof ArgumentsExpressionContext ||
+                expression instanceof MemberIndexExpressionContext
     }
 
     @Override
     void enterExpressionStatement(ECMAScriptParser.ExpressionStatementContext ctx) {
         if (ctx.text == "'use strict';")
-            walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+            _setLastVisited ctx
     }
 
     boolean isInsideClass
 
     ECMAScriptParser.FunctionBodyContext classBody
+    String className
 
     @Override
     void enterVariableStatement(ECMAScriptParser.VariableStatementContext ctx) {
         def variableDeclaration = ctx.variableDeclarationList().variableDeclaration(0)
-        def className = variableDeclaration.Identifier().text
+        def varIdentText = variableDeclaration.Identifier().text
 
         def initialiserExpression = variableDeclaration.initialiser()?.singleExpression()
 
-        if (isUpperCase(className.charAt(0)) && initialiserExpression instanceof ArgumentsExpressionContext) {
+        if (isUpperCase(varIdentText.charAt(0)) && initialiserExpression instanceof ArgumentsExpressionContext
+                && initialiserExpression.singleExpression() instanceof ParenthesizedExpressionContext) {
+            className = varIdentText
             isInsideClass = true
             dartSrc += "class $className "
-            classBody = ((ECMAScriptParser.FunctionExpressionContext)
-                    ((ECMAScriptParser.ParenthesizedExpressionContext)
+            classBody = ((FunctionExpressionContext)
+                    ((ParenthesizedExpressionContext)
                             initialiserExpression.singleExpression())
                             .expressionSequence().singleExpression(0)).functionBody()
 
@@ -238,6 +362,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
             walker.lastVisitedNodeIndex = ctx.eos().start.tokenIndex
             isInsideClass = false
             classBody = null
+            className = null
         }
     }
 
@@ -253,26 +378,38 @@ class Js2DartListener extends ECMAScriptBaseListener {
     void enterAssignmentExpression(ECMAScriptParser.AssignmentExpressionContext ctx) {
         def expression0 = ctx.singleExpression(0)
         def expression1 = ctx.singleExpression(1)
-        if ((isInsideClass || isInsideSmallClass) &&
-                expression0 instanceof ECMAScriptParser.MemberDotExpressionContext &&
-                expression0.identifierName().text == 'prototype' &&
-                expression1 instanceof ECMAScriptParser.ObjectLiteralExpressionContext
-        ) {
-            isInsideClassPrototype = true
-            _walk(expression1.objectLiteral().propertyNameAndValueList())
-            isInsideClassPrototype = false
+        if ((isInsideClass || isInsideSmallClass)) {
+            if (expression0 instanceof MemberDotExpressionContext &&
+                    expression0.identifierName().text == 'prototype' &&
+                    expression1 instanceof ObjectLiteralExpressionContext
+            ) {
+                isInsideClassPrototype = true
+                _walk(expression1.objectLiteral().propertyNameAndValueList())
+                isInsideClassPrototype = false
 
-            if(isInsideSmallClass) {
-                dartSrc += "\n}\n"
-                isInsideSmallClass = false
-                walker.lastVisitedNodeIndex = ctx.parent.parent.stop.tokenIndex
+                if (isInsideSmallClass) {
+                    dartSrc += "\n}\n"
+                    isInsideSmallClass = false
+                }
+                _setLastVisited ctx.parent.parent
+            } else if (expression0 instanceof MemberDotExpressionContext &&
+                    expression0.singleExpression().text == className &&
+                    expression1 instanceof FunctionExpressionContext
+            ) {
+
+                dartSrc += "static ${expression0.identifierName().text}("
+                _walk(expression1.formalParameterList())
+                dartSrc += ') {'
+                _walk(expression1.functionBody())
+                _walk(expression1.children.last())
+                _setLastVisited ctx.parent.parent
             }
         }
     }
 
     @Override
     void enterPropertyNameAndValueList(ECMAScriptParser.PropertyNameAndValueListContext ctx) {
-        if(isInsideClassPrototype) {
+        if (isInsideClassPrototype || isInsideInheritMixin) {
             ctx.propertyAssignment().each { _walk(it) }
         }
     }
@@ -280,13 +417,13 @@ class Js2DartListener extends ECMAScriptBaseListener {
     @Override
     void enterPropertyExpressionAssignment(ECMAScriptParser.PropertyExpressionAssignmentContext ctx) {
         def expression = ctx.singleExpression()
-        if (isInsideClassPrototype && expression instanceof ECMAScriptParser.FunctionExpressionContext) {
+        if ((isInsideClassPrototype || isInsideInheritMixin) && expression instanceof FunctionExpressionContext) {
             _walk(ctx.propertyName())
             dartSrc += '('
             _walk(expression.formalParameterList())
             dartSrc += ') {'
             _walk(expression.functionBody())
-            walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+            _setLastVisited ctx
             _visitTerminal(expression.children.last())
         }
     }
@@ -296,7 +433,7 @@ class Js2DartListener extends ECMAScriptBaseListener {
         _walk(ctx.getter())
         dartSrc += ' {'
         _walk(ctx.functionBody())
-        walker.lastVisitedNodeIndex = ctx.stop.tokenIndex
+        _setLastVisited ctx
         _visitTerminal(ctx.children.last())
     }
 
@@ -306,10 +443,10 @@ class Js2DartListener extends ECMAScriptBaseListener {
 
     @Override
     void enterFunctionDeclaration(ECMAScriptParser.FunctionDeclarationContext ctx) {
-        def className = ctx.Identifier().text
-        if(!isInsideClass && isUpperCase(className.charAt(0))) {
-            dartSrc += "class ${className} {\n" +
-                    "${className}("
+        def smallClassName = ctx.Identifier().text
+        if (!isInsideClass && isUpperCase(smallClassName.charAt(0))) {
+            dartSrc += "class ${smallClassName} {\n" +
+                    "${smallClassName}("
             _walk(ctx.formalParameterList())
             dartSrc += ") {"
             _walk(ctx.functionBody())
@@ -318,15 +455,59 @@ class Js2DartListener extends ECMAScriptBaseListener {
             isInsideSmallClass = true
 
 
+        } else if (isInsideClass && smallClassName == className && ctx.functionBody().sourceElements()?.sourceElement(0)?.text?.contains('.call(')) {
+            dartSrc += "${smallClassName}("
+            _walk(ctx.formalParameterList())
+            dartSrc += ") : super("
+
+            def superParams = (ECMAScriptParser.ArgumentListContext) ctx.functionBody().sourceElements().sourceElement(0).statement().expressionStatement()
+                    .expressionSequence().singleExpression(0).getChild(1).getChild(1)
+
+            for (def i = 1; i < superParams.singleExpression().size(); i++) {
+                _walk(superParams.singleExpression(i))
+                if (i != superParams.singleExpression().size() - 1) {
+                    dartSrc += ', '
+                }
+            }
+            dartSrc += ") {"
+//            _walk(ctx.functionBody())
+            for (def i = 1; i < ctx.functionBody().sourceElements().sourceElement().size(); i++) {
+                _walk(ctx.functionBody().sourceElements().sourceElement(i))
+            }
+            _walk(ctx.children.last())
         } else {
             walker.lastVisitedNodeIndex = ctx.Function().symbol.tokenIndex
         }
     }
 
     @Override
-    void enterFunctionExpression(ECMAScriptParser.FunctionExpressionContext ctx) {
+    void enterFunctionExpression(FunctionExpressionContext ctx) {
         walker.lastVisitedNodeIndex = ctx.Function().symbol.tokenIndex
     }
 
-    //Todo: shift, unshift, and super calls, static methods
+    @Override
+    void enterDeleteExpression(ECMAScriptParser.DeleteExpressionContext ctx) {
+        def singleExpression = ctx.singleExpression()
+
+        // delete exp[keyName] -> exp.remove(keyName)
+        if(singleExpression instanceof MemberIndexExpressionContext) {
+            _walk singleExpression.singleExpression()
+            dartSrc += '.remove('
+            _walk singleExpression.expressionSequence()
+            dartSrc += ')'
+            _setLastVisited ctx
+        }
+    }
+
+    @Override
+    void enterInstanceofExpression(InstanceofExpressionContext ctx) {
+        _walk ctx.singleExpression(0)
+        dartSrc += ' is '
+        _walk ctx.singleExpression(1)
+    }
+
+    //TODO:
+    // setTimeOut ->
+    // parseInt(exp) -> int.parse(exp)
+    // parseInt(exp, radix) -> int.parse(exp, radix: radix)
 }

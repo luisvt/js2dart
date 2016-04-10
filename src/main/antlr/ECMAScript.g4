@@ -297,14 +297,18 @@ ifStatement
 ///     for ( Expression? ; Expression? ; Expression? ) Statement
 ///     for ( var VariableDeclarationList ; Expression? ; Expression? ) Statement
 ///     for ( LeftHandSideExpression in Expression ) Statement
+///     for ( LeftHandSideExpression of Expression ) Statement
 ///     for ( var VariableDeclaration in Expression ) Statement
+///     for ( var VariableDeclaration of Expression ) Statement
 iterationStatement
  : Do statement While '(' expressionSequence ')' eos                                                 # DoStatement
  | While '(' expressionSequence ')' statement                                                        # WhileStatement
  | For '(' expressionSequence? ';' expressionSequence? ';' expressionSequence? ')' statement         # ForStatement
  | For '(' Var variableDeclarationList ';' expressionSequence? ';' expressionSequence? ')' statement # ForVarStatement
  | For '(' singleExpression In expressionSequence ')' statement                                      # ForInStatement
+ | For '(' singleExpression Of expressionSequence ')' statement                                      # ForOfStatement
  | For '(' Var variableDeclaration In expressionSequence ')' statement                               # ForVarInStatement
+ | For '(' Var variableDeclaration Of expressionSequence ')' statement                               # ForVarOfStatement
  ;
 
 /// ContinueStatement :
@@ -644,6 +648,7 @@ singleExpression
  | singleExpression ( '<' | '>' | '<=' | '>=' ) singleExpression          # RelationalExpression
  | singleExpression Instanceof singleExpression                           # InstanceofExpression
  | singleExpression In singleExpression                                   # InExpression
+ | singleExpression Of singleExpression                                   # OfExpression
  | singleExpression ( '==' | '!=' | '===' | '!==' ) singleExpression      # EqualityExpression
  | singleExpression '&' singleExpression                                  # BitAndExpression
  | singleExpression '^' singleExpression                                  # BitXOrExpression
@@ -885,6 +890,7 @@ If         : 'if';
 Throw      : 'throw';
 Delete     : 'delete';
 In         : 'in';
+Of         : 'of';
 Try        : 'try';
 
 /// 7.6.1.2 Future Reserved Words

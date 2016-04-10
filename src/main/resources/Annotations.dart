@@ -23,6 +23,9 @@ import 'package:pdfjs/core/stream.dart';
 import 'package:pdfjs/core/colorspace.dart';
 import 'package:pdfjs/core/obj.dart';
 import 'package:pdfjs/core/evaluator.dart';
+import 'dart:typed_data';
+import 'util.dart';
+import 'dart:async';
 
 //} else if ( exports == null) {
 //factory(exports,
@@ -299,7 +302,7 @@ class Annotation {
    *                        4 (CMYK) elements
    */
   setColor(color) {
-    var rgbColor = new Uint8Array(3); // Black in RGB color space (default)
+    var rgbColor = new Uint8List(3); // Black in RGB color space (default)
     if (!isArray(color)) {
       this.color = rgbColor;
       return;
@@ -448,11 +451,7 @@ class Annotation {
     });
   }
 
-  Annotation.appendToOperatorList
-
-  =
-
-  Annotation_appendToOperatorList(annotations, opList, partialEvaluator, task, intent) {
+  static appendToOperatorList(annotations, opList, partialEvaluator, task, intent) {
     var annotationPromises = [];
     for (var i = 0, n = annotations.length; i < n; ++i) {
       if (or((and(intent == 'display', annotations[i].viewable)),
@@ -461,7 +460,7 @@ class Annotation {
             annotations[i].getOperatorList(partialEvaluator, task));
       }
     }
-    return Promise.all(annotationPromises).then((operatorLists) {
+    return Future.wait(annotationPromises).then((operatorLists) {
       opList.addOp(OPS.beginAnnotations, []);
       for (var i = 0, n = operatorLists.length; i < n; ++i) {
         opList.addOpList(operatorLists[i]);
@@ -469,7 +468,6 @@ class Annotation {
       opList.addOp(OPS.endAnnotations, []);
     });
   }
-
 }
 
 /**
@@ -478,6 +476,16 @@ class Annotation {
  * @class
  */
 class AnnotationBorderStyle {
+  int width;
+
+  int style;
+
+  List dashArray;
+
+  int horizontalCornerRadius;
+
+  int verticalCornerRadius;
+
   /**
    * @constructor
    * @private
@@ -604,15 +612,11 @@ class AnnotationBorderStyle {
     }
   }
 
-  ;
-
 
 }
 
 class WidgetAnnotation extends Annotation {
-  WidgetAnnotation(params) {
-    Annotation.call(this, params);
-
+  WidgetAnnotation(params) : super(params) {
     var dict = params.dict;
     var data = this.data;
 
@@ -642,7 +646,7 @@ class WidgetAnnotation extends Annotation {
       var parentRef = namedItem.getRaw('Parent');
       var name = namedItem.get('T');
       if (name) {
-        fieldName.unshift(stringToPDFString(name));
+        unshift(fieldName, stringToPDFString(name));
       } else if (and(parent, ref)) {
 // The field name is absent, that means more than one field
 // with the same name may exist. Replacing the empty name
@@ -657,7 +661,7 @@ class WidgetAnnotation extends Annotation {
             break;
           }
         }
-        fieldName.unshift('`' + j);
+        unshift(fieldName, '`' + j);
       }
       namedItem = parent;
       ref = parentRef;
@@ -669,20 +673,14 @@ class WidgetAnnotation extends Annotation {
 }
 
 class TextWidgetAnnotation extends WidgetAnnotation {
-  TextWidgetAnnotation(params) {
-    WidgetAnnotation.call(this, params);
-
+  TextWidgetAnnotation(params) : super(params) {
     this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
   }
 
 
-  getOperatorList
-
-      :
-
-  TextWidgetAnnotation_getOperatorList(evaluator, task) {
+  getOperatorList(evaluator, task) {
     if (this.appearance) {
-      return Annotation.prototype.getOperatorList.call(this, evaluator, task);
+      return super.getOperatorList(evaluator, task);
     }
 
     var opList = new OperatorList();
@@ -709,9 +707,7 @@ class TextAnnotation extends Annotation {
 
   // px
 
-  TextAnnotation(parameters) {
-    Annotation.call(this, parameters);
-
+  TextAnnotation(parameters) : super(parameters) {
     this.data.annotationType = AnnotationType.TEXT;
 
     if (this.data.hasAppearance) {
@@ -731,9 +727,7 @@ class TextAnnotation extends Annotation {
 }
 
 class LinkAnnotation extends Annotation {
-  LinkAnnotation(params) {
-    Annotation.call(this, params);
-
+  LinkAnnotation(params) : super(params) {
     var dict = params.dict;
     var data = this.data;
     data.annotationType = AnnotationType.LINK;
@@ -808,9 +802,7 @@ class LinkAnnotation extends Annotation {
 }
 
 class PopupAnnotation extends Annotation {
-  PopupAnnotation(parameters) {
-    Annotation.call(this, parameters);
-
+  PopupAnnotation(parameters) : super(parameters) {
     this.data.annotationType = AnnotationType.POPUP;
 
     var dict = parameters.dict;
@@ -837,9 +829,7 @@ class PopupAnnotation extends Annotation {
 }
 
 class HighlightAnnotation extends Annotation {
-  HighlightAnnotation(parameters) {
-    Annotation.call(this, parameters);
-
+  HighlightAnnotation(parameters) : super(parameters) {
     this.data.annotationType = AnnotationType.HIGHLIGHT;
     this._preparePopup(parameters.dict);
 
@@ -851,9 +841,7 @@ class HighlightAnnotation extends Annotation {
 }
 
 class UnderlineAnnotation extends Annotation {
-  UnderlineAnnotation(parameters) {
-    Annotation.call(this, parameters);
-
+  UnderlineAnnotation(parameters) : super(parameters) {
     this.data.annotationType = AnnotationType.UNDERLINE;
     this._preparePopup(parameters.dict);
 
@@ -865,9 +853,7 @@ class UnderlineAnnotation extends Annotation {
 }
 
 class SquigglyAnnotation extends Annotation {
-  SquigglyAnnotation(parameters) {
-    Annotation.call(this, parameters);
-
+  SquigglyAnnotation(parameters) : super(parameters) {
     this.data.annotationType = AnnotationType.SQUIGGLY;
     this._preparePopup(parameters.dict);
 
@@ -879,9 +865,7 @@ class SquigglyAnnotation extends Annotation {
 }
 
 class StrikeOutAnnotation extends Annotation {
-  StrikeOutAnnotation(parameters) {
-    Annotation.call(this, parameters);
-
+  StrikeOutAnnotation(parameters) : super(parameters) {
     this.data.annotationType = AnnotationType.STRIKEOUT;
     this._preparePopup(parameters.dict);
 
@@ -894,8 +878,6 @@ class StrikeOutAnnotation extends Annotation {
 
 class FileAttachmentAnnotation extends Annotation {
   FileAttachmentAnnotation(parameters) : super(parameters) {
-    Annotation.call(this, parameters);
-
     var file = new FileSpec(parameters.dict.get('FS'), parameters.xref);
 
     this.data.annotationType = AnnotationType.FILEATTACHMENT;
