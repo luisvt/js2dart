@@ -1,3 +1,16 @@
+var outlineItem = {
+  dest: dest,
+  url: url,
+  title: stringToPDFString(title),
+  color: rgbColor,
+  count: outlineDict.get('Count'),
+  bold: !!(flags & 2),
+  italic: !!(flags & 1),
+  items: []
+};
+
+Math.round(3.5);
+
 arr.slice();
 
 Array.prototype.push.apply(arr1, arr2);
@@ -11,6 +24,10 @@ var Apple = (function () {
   Apple.prototype = {
     get color() {
       return 'red';
+    },
+
+    set color(color) {
+      
     },
 
     setFlags: function Annotation_setFlags(flags) {
