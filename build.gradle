@@ -4,6 +4,8 @@ version '1.0-SNAPSHOT'
 apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'antlr'
+apply plugin:'application'
+mainClassName = 'Js2Dart'
 
 sourceCompatibility = 1.8
 
@@ -15,4 +17,13 @@ dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.3.11'
     testCompile 'junit:junit:4.11'
     antlr 'org.antlr:antlr4:4.5'
+}
+
+task uberjar(type: Jar) {
+    from files(sourceSets.main.output.classesDir)
+    from configurations.runtime.asFileTree.files.collect { zipTree(it) }
+
+    manifest {
+        attributes 'Main-Class': 'Js2Dart'
+    }
 }
