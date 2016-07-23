@@ -41,7 +41,8 @@ class RefPhase extends ECMAScriptBaseListener {
             hiddenTokensToLeft.each { dartSrc += it.text }
         }
 
-        dartSrc += node
+        if (node.text != '<EOF>')
+            dartSrc += node
     }
 
     @Override
@@ -288,9 +289,9 @@ class RefPhase extends ECMAScriptBaseListener {
                 dartSrc += "import 'package:${it.text.substring(1, it.text.length() - 1)}.dart';\n"
             }
             _setLastVisited ctx.parent.parent
-        } else if (ctx.text.startsWith('require')) {
-            dartSrc += "import ${ctx.arguments().argumentList().singleExpression(0).text.replace('.js', '.dart')};\n"
-            _setLastVisited ctx
+//        } else if (ctx.text.startsWith('require')) {
+//            dartSrc += "import ${ctx.arguments().argumentList().singleExpression(0).text.replace('.js', '.dart')};\n"
+//            _setLastVisited ctx
         }
     }
 
@@ -325,7 +326,8 @@ class RefPhase extends ECMAScriptBaseListener {
         def initialiserExpression = variableDeclaration.initialiser()?.singleExpression()
 
         if (isUpperCase(varIdentText.charAt(0)) && initialiserExpression instanceof ECMAScriptParser.ArgumentsExpressionContext
-                && initialiserExpression.singleExpression() instanceof ECMAScriptParser.ParenthesizedExpressionContext) {
+                && initialiserExpression.singleExpression() instanceof ECMAScriptParser.ParenthesizedExpressionContext
+        ) {
             className = varIdentText
             isInsideClass = true
             dartSrc += "class $className "
@@ -353,6 +355,40 @@ class RefPhase extends ECMAScriptBaseListener {
             isInsideClass = false
             classBody = null
             className = null
+        } else if (initialiserExpression instanceof ECMAScriptParser.AssignmentExpressionContext
+                && initialiserExpression.singleExpression(0).text == 'module.exports'
+                && initialiserExpression.singleExpression(1) instanceof ECMAScriptParser.FunctionExpressionContext
+        ) {
+            className = varIdentText
+            isInsideClass = true
+            dartSrc += "class $className "
+
+            def constructorExp = (ECMAScriptParser.FunctionExpressionContext) initialiserExpression.singleExpression(1)
+
+            dartSrc += '{' +
+                    "\n\t$className("
+            _walk(constructorExp.formalParameterList())
+            dartSrc += ") {"
+
+            _walk(constructorExp.functionBody())
+            dartSrc += "\n\t}\n}"
+            walker.lastVisitedNodeIndex = ctx.eos().start.tokenIndex
+            isInsideClass = false
+            classBody = null
+            className = null
+        } else if (initialiserExpression instanceof ECMAScriptParser.ArgumentsExpressionContext &&
+                initialiserExpression.singleExpression().text == 'require'
+        ) {
+            def importExpression = initialiserExpression.arguments().argumentList().singleExpression(0)
+            def importPathText = importExpression.text.substring(1, importExpression.text.length() - 1)
+
+            if (importPathText.startsWith('.') || importPathText.startsWith('/'))
+                importPathText = "${importPathText}.dart"
+            else
+                importPathText = "package:${importPathText}.dart"
+
+            dartSrc += "import '$importPathText' show $varIdentText;"
+            walker.lastVisitedNodeIndex = ctx.eos().start.tokenIndex
         }
     }
 
@@ -407,8 +443,29 @@ class RefPhase extends ECMAScriptBaseListener {
                         dartSrc += "var ${expression0.identifierName().text} ="
                         _walk expression1
                     }
+                } else if (expression0.singleExpression().text.contains('prototype')
+                        && expression1 instanceof ECMAScriptParser.FunctionExpressionContext
+                ) {
+                    dartSrc += "${expression0.identifierName().text}("
+                    _walk(expression1.formalParameterList())
+                    dartSrc += ") {\n"
+                    _walk(expression1.functionBody())
+                    dartSrc += "\n}"
+                    walker.lastVisitedNodeIndex = ((ECMAScriptParser.ExpressionStatementContext) ctx.parent.parent)
+                            .eos().start.tokenIndex
                 }
             }
+        } else if (expression0 instanceof ECMAScriptParser.MemberDotExpressionContext
+                && expression0.singleExpression().text.contains('prototype')
+                && expression1 instanceof ECMAScriptParser.FunctionExpressionContext
+        ) {
+            dartSrc += "${expression0.identifierName().text}("
+            _walk(expression1.formalParameterList())
+            dartSrc += ") {\n"
+            _walk(expression1.functionBody())
+            dartSrc += "\n}"
+            walker.lastVisitedNodeIndex = ((ECMAScriptParser.ExpressionStatementContext) ctx.parent.parent)
+                    .eos().start.tokenIndex
         }
     }
 
@@ -457,7 +514,7 @@ class RefPhase extends ECMAScriptBaseListener {
         def firstBodySourceElement = ctx.functionBody().sourceElements()?.sourceElement(0)
         if (!isInsideClass && isUpperCase(smallClassName.charAt(0))) {
             dartSrc += "class ${smallClassName} {\n" +
-                    "${smallClassName}("
+                    "\t${smallClassName}("
             _walk(ctx.formalParameterList())
             dartSrc += ") {"
             _walk(ctx.functionBody())

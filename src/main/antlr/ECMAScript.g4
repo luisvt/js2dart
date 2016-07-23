@@ -890,7 +890,7 @@ If         : 'if';
 Throw      : 'throw';
 Delete     : 'delete';
 In         : 'in';
-Of         : 'of';
+Of         : ' of';
 Try        : 'try';
 
 /// 7.6.1.2 Future Reserved Words

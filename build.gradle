@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.3.11'
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
     testCompile 'junit:junit:4.11'
     antlr 'org.antlr:antlr4:4.5'
 }
