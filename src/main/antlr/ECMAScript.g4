@@ -705,9 +705,8 @@ identifierName
 reservedWord
  : keyword
  | futureReservedWord
- | ( NullLiteral
-   | BooleanLiteral
-   )
+ | NullLiteral
+ | BooleanLiteral
  ;
 
 keyword

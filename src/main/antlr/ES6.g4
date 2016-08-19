@@ -10,11 +10,11 @@ grammar ES6;
 //   CommonToken
 //   DivPunctuator
 //   RightBracePunctuator
-InputElementDiv
+inputElementDiv
   : WhiteSpace
   | LineTerminator
   | Comment
-  | CommonToken
+  | commonToken
   | DivPunctuator
   | RightBracePunctuator
   ;
@@ -26,11 +26,11 @@ InputElementDiv
 //   CommonToken
 //   RightBracePunctuator
 //   RegularExpressionLiteral
-InputElementRegExp
+inputElementRegExp
   : WhiteSpace
   | LineTerminator
   | Comment
-  | CommonToken
+  | commonToken
   | RightBracePunctuator
   | RegularExpressionLiteral
   ;
@@ -42,13 +42,13 @@ InputElementRegExp
 //   CommonToken
 //   RegularExpressionLiteral
 //   TemplateSubstitutionTail
-InputElementRegExpOrTemplateTail
+inputElementRegExpOrTemplateTail
   : WhiteSpace
   | LineTerminator
   | Comment
-  | CommonToken
+  | commonToken
   | RegularExpressionLiteral
-  | TemplateSubstitutionTail
+  | templateSubstitutionTail
   ;
 
 //  InputElementTemplateTail ::
@@ -58,13 +58,13 @@ InputElementRegExpOrTemplateTail
 //   CommonToken
 //   DivPunctuator
 //   TemplateSubstitutionTail
-InputElementTemplateTail
+inputElementTemplateTail
   : WhiteSpace
   | LineTerminator
   | Comment
-  | CommonToken
+  | commonToken
   | DivPunctuator
-  | TemplateSubstitutionTail
+  | templateSubstitutionTail
   ;
 
 //  WhiteSpace ::
@@ -169,12 +169,12 @@ SingleLineCommentChar
 //   NumericLiteral
 //   StringLiteral
 //   Template
-CommonToken
+commonToken
   : IdentifierName
   | Punctuator
   | NumericLiteral
   | StringLiteral
-  | Template
+  | template
   ;
 
 //  IdentifierName ::
@@ -486,7 +486,7 @@ LineContinuation
 //   UnicodeEscapeSequence
 EscapeSequence
   : CharacterEscapeSequence
-  | '0' //[lookahead ≠ DecimalDigit]
+  | '0' {_input.LA(1) !=  DecimalDigit}?
   | HexEscapeSequence
   | UnicodeEscapeSequence
   ;
@@ -625,47 +625,47 @@ RegularExpressionFlags
 //  Template ::
 //   NoSubstitutionTemplate
 //   TemplateHead
-Template
-  : NoSubstitutionTemplate
-  | TemplateHead
+template
+  : noSubstitutionTemplate
+  | templateHead
   ;
 
 //  NoSubstitutionTemplate ::
 //   ` TemplateCharactersopt `
-NoSubstitutionTemplate
-  : '`' TemplateCharacters? '`'
+noSubstitutionTemplate
+  : '`' templateCharacters? '`'
   ;
 
 //  TemplateHead ::
 //   ` TemplateCharactersopt ${
-TemplateHead
-  : '`' TemplateCharacters? '${'
+templateHead
+  : '`' templateCharacters? '${'
   ;
 
 //  TemplateSubstitutionTail ::
 //   TemplateMiddle
 //   TemplateTail
-TemplateSubstitutionTail
-  : TemplateMiddle
-  | TemplateTail
+templateSubstitutionTail
+  : templateMiddle
+  | templateTail
   ;
 
 //  TemplateMiddle ::
 //   } TemplateCharactersopt ${
-TemplateMiddle
-  : '}' TemplateCharacters? '${'
+templateMiddle
+  : '}' templateCharacters? '${'
   ;
 
 //  TemplateTail ::
 //   } TemplateCharactersopt `
-TemplateTail
-  : '}' TemplateCharacters? '`'
+templateTail
+  : '}' templateCharacters? '`'
   ;
 
 //  TemplateCharacters ::
 //   TemplateCharacter TemplateCharactersopt
-TemplateCharacters
-  : TemplateCharacter TemplateCharacters?
+templateCharacters
+  : templateCharacter templateCharacters?
   ;
 
 //  TemplateCharacter ::
@@ -674,8 +674,8 @@ TemplateCharacters
 //   LineContinuation
 //   LineTerminatorSequence
 //   SourceCharacter but not one of ` or \ or $ or LineTerminator
-TemplateCharacter
-  : '$' [lookahead ≠ {]
+templateCharacter
+  : '$' {(_input.LA(1) != '{')}?
   | '\\' EscapeSequence
   | LineContinuation
   | LineTerminatorSequence
@@ -685,42 +685,42 @@ TemplateCharacter
 //  IdentifierReference[Yield] :
 //   Identifier
 //   [~Yield] yield
-IdentifierReference
-  : Identifier
+identifierReference
+  : identifier
   | 'yield'
   ;
 
-IdentifierReference_Yield
-  : Identifier
+identifierReference_Yield
+  : identifier
   ;
 
 //  BindingIdentifier[Yield] :
 //   Identifier
 //   [~Yield] yield
-BindingIdentifier
-  : Identifier
+bindingIdentifier
+  : identifier
   | 'yield'
   ;
 
-BindingIdentifier_Yield
-  : Identifier
+bindingIdentifier_Yield
+  : identifier
   ;
 
 //  LabelIdentifier[Yield] :
 //   Identifier
 //   [~Yield] yield
-LabelIdentifier
-  : Identifier
+labelIdentifier
+  : identifier
   | 'yield'
   ;
 
-LabelIdentifier_Yield
-  : Identifier
+labelIdentifier_Yield
+  : identifier
   ;
 
 //  Identifier :
 //   IdentifierName but not ReservedWord
-Identifier
+identifier
   : IdentifierName ~ReservedWord
   ;
 
@@ -736,32 +736,32 @@ Identifier
 //   RegularExpressionLiteral
 //   TemplateLiteral[?Yield]
 //   CoverParenthesizedExpressionAndArrowParameterList[?Yield]
-PrimaryExpression
+primaryExpression
   : 'this'
-  | IdentifierReference
+  | identifierReference
   | Literal
-  | ArrayLiteral
-  | ObjectLiteral
-  | FunctionExpression
-  | ClassExpression
-  | GeneratorExpression
+  | arrayLiteral
+  | objectLiteral
+  | functionExpression
+  | classExpression
+  | generatorExpression
   | RegularExpressionLiteral
-  | TemplateLiteral
-  | CoverParenthesizedExpressionAndArrowParameterList
+  | templateLiteral
+  | coverParenthesizedExpressionAndArrowParameterList
   ;
 
-PrimaryExpression_Yield
+primaryExpression_Yield
   : 'this'
-  | IdentifierReference_Yield
+  | identifierReference_Yield
   | Literal
-  | ArrayLiteral_Yield
-  | ObjectLiteral_Yield
-  | FunctionExpression
-  | ClassExpression_Yield
-  | GeneratorExpression
+  | arrayLiteral_Yield
+  | objectLiteral_Yield
+  | functionExpression
+  | classExpression_Yield
+  | generatorExpression
   | RegularExpressionLiteral
-  | TemplateLiteral_Yield
-  | CoverParenthesizedExpressionAndArrowParameterList_Yield
+  | templateLiteral_Yield
+  | coverParenthesizedExpressionAndArrowParameterList_Yield
   ;
 
 //  CoverParenthesizedExpressionAndArrowParameterList[Yield] :
@@ -769,18 +769,18 @@ PrimaryExpression_Yield
 //   ( )
 //   ( ... BindingIdentifier[?Yield] )
 //   ( Expression[In, ?Yield] , ... BindingIdentifier[?Yield] )
-CoverParenthesizedExpressionAndArrowParameterList
-  : '(' Expression_In ')'
+coverParenthesizedExpressionAndArrowParameterList
+  : '(' expression_In ')'
   | '(' ')'
-  | '(' '...' BindingIdentifier ')'
-  | '(' Expression_In ',' '...' BindingIdentifier ')'
+  | '(' '...' bindingIdentifier ')'
+  | '(' expression_In ',' '...' bindingIdentifier ')'
   ;
 
-CoverParenthesizedExpressionAndArrowParameterList_Yield
-  : '(' Expression_In_Yield ')'
+coverParenthesizedExpressionAndArrowParameterList_Yield
+  : '(' expression_In_Yield ')'
   | '(' ')'
-  | '(' '...' BindingIdentifier_Yield ')'
-  | '(' Expression_In_Yield ',' '...' BindingIdentifier_Yield ')'
+  | '(' '...' bindingIdentifier_Yield ')'
+  | '(' expression_In_Yield ',' '...' bindingIdentifier_Yield ')'
   ;
 
 //  Literal :
@@ -799,16 +799,16 @@ Literal
 //   [ Elisionopt ]
 //   [ ElementList[?Yield] ]
 //   [ ElementList[?Yield] , Elisionopt ]
-ArrayLiteral
+arrayLiteral
   : '[' Elision? ']'
-  | '[' ElementList ']'
-  | '[' ElementList ',' Elision? ']'
+  | '[' elementList ']'
+  | '[' elementList ',' Elision? ']'
   ;
 
-ArrayLiteral_Yield
+arrayLiteral_Yield
   : '[' Elision? ']'
-  | '[' ElementList_Yield ']'
-  | '[' ElementList_Yield ',' Elision? ']'
+  | '[' elementList_Yield ']'
+  | '[' elementList_Yield ',' Elision? ']'
   ;
 
 //  ElementList[Yield] :
@@ -816,12 +816,12 @@ ArrayLiteral_Yield
 //   Elisionopt SpreadElement[?Yield]
 //   ElementList[?Yield] , Elisionopt AssignmentExpression[In, ?Yield]
 //   ElementList[?Yield] , Elisionopt SpreadElement[?Yield]
-ElementList
-  : Elision? (AssignmentExpression_In | SpreadElement) (',' Elision? (AssignmentExpression_In | SpreadElement))*
+elementList
+  : Elision? (assignmentExpression_In | spreadElement) (',' Elision? (assignmentExpression_In | spreadElement))*
   ;
 
-ElementList_Yield
-  : Elision? (AssignmentExpression_In_Yield | SpreadElement_Yield) (',' Elision? (AssignmentExpression_In_Yield | SpreadElement_Yield))*
+elementList_Yield
+  : Elision? (assignmentExpression_In_Yield | spreadElement_Yield) (',' Elision? (assignmentExpression_In_Yield | spreadElement_Yield))*
   ;
 
 //  Elision :
@@ -833,39 +833,39 @@ Elision
 
 //  SpreadElement[Yield] :
 //   ... AssignmentExpression[In, ?Yield]
-SpreadElement
-  : '...' AssignmentExpression_In
+spreadElement
+  : '...' assignmentExpression_In
   ;
 
-SpreadElement_Yield
-  : '...' AssignmentExpression_In_Yield
+spreadElement_Yield
+  : '...' assignmentExpression_In_Yield
   ;
 
 //  ObjectLiteral[Yield] :
 //   { }
 //   { PropertyDefinitionList[?Yield] }
 //   { PropertyDefinitionList[?Yield] , }
-ObjectLiteral
+objectLiteral
   : '{' '}'
-  | '{' PropertyDefinitionList '}'
-  | '{' PropertyDefinitionList ',' '}'
+  | '{' propertyDefinitionList '}'
+  | '{' propertyDefinitionList ',' '}'
   ;
 
-ObjectLiteral_Yield
+objectLiteral_Yield
   : '{' '}'
-  | '{' PropertyDefinitionList_Yield '}'
-  | '{' PropertyDefinitionList_Yield ',' '}'
+  | '{' propertyDefinitionList_Yield '}'
+  | '{' propertyDefinitionList_Yield ',' '}'
   ;
 
 //  PropertyDefinitionList[Yield] :
 //   PropertyDefinition[?Yield]
 //   PropertyDefinitionList[?Yield] , PropertyDefinition[?Yield]
-PropertyDefinitionList
-  : PropertyDefinition (',' PropertyDefinition)*
+propertyDefinitionList
+  : propertyDefinition (',' propertyDefinition)*
   ;
 
-PropertyDefinitionList_Yield
-  : PropertyDefinition_Yield (',' PropertyDefinition_Yield)*
+propertyDefinitionList_Yield
+  : propertyDefinition_Yield (',' propertyDefinition_Yield)*
   ;
 
 //  PropertyDefinition[Yield] :
@@ -873,31 +873,31 @@ PropertyDefinitionList_Yield
 //   CoverInitializedName[?Yield]
 //   PropertyName[?Yield] : AssignmentExpression[In, ?Yield]
 //   MethodDefinition[?Yield]
-PropertyDefinition
-  : IdentifierReference
-  | CoverInitializedName
-  | PropertyName ':' AssignmentExpression_In
-  | MethodDefinition
+propertyDefinition
+  : identifierReference
+  | coverInitializedName
+  | propertyName ':' assignmentExpression_In
+  | methodDefinition
   ;
 
-PropertyDefinition_Yield
-  : IdentifierReference_Yield
-  | CoverInitializedName_Yield
-  | PropertyName_Yield ':' AssignmentExpression_In_Yield
-  | MethodDefinition_Yield
+propertyDefinition_Yield
+  : identifierReference_Yield
+  | coverInitializedName_Yield
+  | propertyName_Yield ':' assignmentExpression_In_Yield
+  | methodDefinition_Yield
   ;
 
 //  PropertyName[Yield] :
 //   LiteralPropertyName
 //   ComputedPropertyName[?Yield]
-PropertyName
+propertyName
   : LiteralPropertyName
-  | ComputedPropertyName
+  | computedPropertyName
   ;
 
-PropertyName_Yield
+propertyName_Yield
   : LiteralPropertyName
-  | ComputedPropertyName_Yield
+  | computedPropertyName_Yield
   ;
 
 //  LiteralPropertyName :
@@ -912,77 +912,77 @@ LiteralPropertyName
 
 //  ComputedPropertyName[Yield] :
 //   [ AssignmentExpression[In, ?Yield] ]
-ComputedPropertyName
-  : '[' AssignmentExpression_In ']'
+computedPropertyName
+  : '[' assignmentExpression_In ']'
   ;
 
-ComputedPropertyName_Yield
-  : '[' AssignmentExpression_In_Yield ']'
+computedPropertyName_Yield
+  : '[' assignmentExpression_In_Yield ']'
   ;
 
 //  CoverInitializedName[Yield] :
 //   IdentifierReference[?Yield] Initializer[In, ?Yield]
-CoverInitializedName
-  : IdentifierReference Initializer_In
+coverInitializedName
+  : identifierReference initializer_In
   ;
 
-CoverInitializedName_Yield
-  : IdentifierReference_Yield Initializer_In_Yield
+coverInitializedName_Yield
+  : identifierReference_Yield initializer_In_Yield
   ;
 
 //  Initializer[In, Yield] :
 //   = AssignmentExpression[?In, ?Yield]
-Initializer
-  : '=' AssignmentExpression
+initializer
+  : '=' assignmentExpression
   ;
 
-Initializer_In
-  : '=' AssignmentExpression_In
+initializer_In
+  : '=' assignmentExpression_In
   ;
 
-Initializer_Yield
-  : '=' AssignmentExpression_Yield
+initializer_Yield
+  : '=' assignmentExpression_Yield
   ;
 
-Initializer_In_Yield
-  : '=' AssignmentExpression_In_Yield
+initializer_In_Yield
+  : '=' assignmentExpression_In_Yield
   ;
 
 //  TemplateLiteral[Yield] :
 //   NoSubstitutionTemplate
 //   TemplateHead Expression[In, ?Yield] TemplateSpans[?Yield]
-TemplateLiteral
-  : NoSubstitutionTemplate
-  | TemplateHead Expression_In TemplateSpans
+templateLiteral
+  : noSubstitutionTemplate
+  | templateHead expression_In templateSpans
   ;
 
-TemplateLiteral_Yield
-  : NoSubstitutionTemplate
-  | TemplateHead Expression_In_Yield TemplateSpans_Yield
+templateLiteral_Yield
+  : noSubstitutionTemplate
+  | templateHead expression_In_Yield templateSpans_Yield
   ;
 
 //  TemplateSpans[Yield] :
 //   TemplateTail
 //   TemplateMiddleList[?Yield] TemplateTail
-TemplateSpans
-  : TemplateTail
-  | TemplateMiddleList TemplateTail
+templateSpans
+  : templateTail
+  | templateMiddleList templateTail
   ;
 
-TemplateSpans_Yield
-  : TemplateTail
-  | TemplateMiddleList_Yield TemplateTail
+templateSpans_Yield
+  : templateTail
+  | templateMiddleList_Yield templateTail
   ;
 
 //  TemplateMiddleList[Yield] :
 //   TemplateMiddle Expression[In, ?Yield]
 //   TemplateMiddleList[?Yield] TemplateMiddle Expression[In, ?Yield]
-TemplateMiddleList
-  :  (TemplateMiddle Expression_In)+
+templateMiddleList
+  :  (templateMiddle expression_In)+
   ;
 
-TemplateMiddleList_Yield
-  : (TemplateMiddle Expression_In_Yield)+
+templateMiddleList_Yield
+  : (templateMiddle expression_In_Yield)+
   ;
 
 //  MemberExpression[Yield] :
@@ -993,36 +993,36 @@ TemplateMiddleList_Yield
 //   SuperProperty[?Yield]
 //   MetaProperty
 //   new MemberExpression[?Yield] Arguments[?Yield]
-MemberExpression
-  : PrimaryExpression
-  | MemberExpression '[' Expression_In ']'
-  | MemberExpression '.' IdentifierName
-  | MemberExpression TemplateLiteral
-  | SuperProperty
+memberExpression
+  : primaryExpression
+  | memberExpression '[' expression_In ']'
+  | memberExpression '.' IdentifierName
+  | memberExpression templateLiteral
+  | superProperty
   | MetaProperty
-  | 'new' MemberExpression Arguments
+  | 'new' memberExpression arguments
   ;
 
-MemberExpression_Yield
-  : PrimaryExpression_Yield
-  | MemberExpression_Yield '[' Expression_In_Yield ']'
-  | MemberExpression_Yield '.' IdentifierName
-  | MemberExpression_Yield TemplateLiteral_Yield
-  | SuperProperty_Yield
+memberExpression_Yield
+  : primaryExpression_Yield
+  | memberExpression_Yield '[' expression_In_Yield ']'
+  | memberExpression_Yield '.' IdentifierName
+  | memberExpression_Yield templateLiteral_Yield
+  | superProperty_Yield
   | MetaProperty
-  | 'new' MemberExpression_Yield Arguments_Yield
+  | 'new' memberExpression_Yield arguments_Yield
   ;
 
 //  SuperProperty[Yield] :
 //   super [ Expression[In, ?Yield] ]
 //   super . IdentifierName
-SuperProperty
-  : 'super' '[' Expression_In ']'
+superProperty
+  : 'super' '[' expression_In ']'
   | 'super' '.' IdentifierName
   ;
 
-SuperProperty_Yield
-  : 'super' '[' Expression_In_Yield ']'
+superProperty_Yield
+  : 'super' '[' expression_In_Yield ']'
   | 'super' '.' IdentifierName
   ;
 
@@ -1041,14 +1041,14 @@ NewTarget
 //  NewExpression[Yield] :
 //   MemberExpression[?Yield]
 //   new NewExpression[?Yield]
-NewExpression
-  : MemberExpression
-  | 'new' NewExpression
+newExpression
+  : memberExpression
+  | 'new' newExpression
   ;
 
-NewExpression_Yield
-  : MemberExpression_Yield
-  | 'new' NewExpression_Yield
+newExpression_Yield
+  : memberExpression_Yield
+  | 'new' newExpression_Yield
   ;
 
 //  CallExpression[Yield] :
@@ -1058,44 +1058,44 @@ NewExpression_Yield
 //   CallExpression[?Yield] [ Expression[In, ?Yield] ]
 //   CallExpression[?Yield] . IdentifierName
 //   CallExpression[?Yield] TemplateLiteral[?Yield]
-CallExpression
-  : MemberExpression Arguments
-  | SuperCall
-  | CallExpression Arguments
-  | CallExpression '[' Expression_In ']'
-  | CallExpression '.' IdentifierName
-  | CallExpression TemplateLiteral
+callExpression
+  : memberExpression arguments
+  | superCall
+  | callExpression arguments
+  | callExpression '[' expression_In ']'
+  | callExpression '.' IdentifierName
+  | callExpression templateLiteral
   ;
-CallExpression_Yield
-  : MemberExpression_Yield Arguments_Yield
-  | SuperCall_Yield
-  | CallExpression_Yield Arguments_Yield
-  | CallExpression_Yield '[' Expression_In_Yield ']'
-  | CallExpression_Yield '.' IdentifierName
-  | CallExpression_Yield TemplateLiteral_Yield
+callExpression_Yield
+  : memberExpression_Yield arguments_Yield
+  | superCall_Yield
+  | callExpression_Yield arguments_Yield
+  | callExpression_Yield '[' expression_In_Yield ']'
+  | callExpression_Yield '.' IdentifierName
+  | callExpression_Yield templateLiteral_Yield
   ;
 
 //  SuperCall[Yield] :
 //   super Arguments[?Yield]
-SuperCall
-  : 'super' Arguments
+superCall
+  : 'super' arguments
   ;
 
-SuperCall_Yield
-  : 'super' Arguments_Yield
+superCall_Yield
+  : 'super' arguments_Yield
   ;
 
 //  Arguments[Yield] :
 //   ( )
 //   ( ArgumentList[?Yield] )
-Arguments
+arguments
   : '(' ')'
-  | '(' ArgumentList ')'
+  | '(' argumentList ')'
   ;
 
-Arguments_Yield
+arguments_Yield
   : '(' ')'
-  | '(' ArgumentList_Yield ')'
+  | '(' argumentList_Yield ')'
   ;
 
 //  ArgumentList[Yield] :
@@ -1103,41 +1103,41 @@ Arguments_Yield
 //   ... AssignmentExpression[In, ?Yield]
 //   ArgumentList[?Yield] , AssignmentExpression[In, ?Yield]
 //   ArgumentList[?Yield] , ... AssignmentExpression[In, ?Yield]
-ArgumentList
-  : '...'? AssignmentExpression_In (',' '...'? AssignmentExpression_In)*
+argumentList
+  : '...'? assignmentExpression_In (',' '...'? assignmentExpression_In)*
   ;
 
-ArgumentList_Yield
-  : '...'? AssignmentExpression_In_Yield (',' '...'? AssignmentExpression_In_Yield)*
+argumentList_Yield
+  : '...'? assignmentExpression_In_Yield (',' '...'? assignmentExpression_In_Yield)*
   ;
 
 //  LeftHandSideExpression[Yield] :
 //   NewExpression[?Yield]
 //   CallExpression[?Yield]
-LeftHandSideExpression
-  : NewExpression
-  | CallExpression
+leftHandSideExpression
+  : newExpression
+  | callExpression
   ;
 
-LeftHandSideExpression_Yield
-  : NewExpression_Yield
-  | CallExpression_Yield
+leftHandSideExpression_Yield
+  : newExpression_Yield
+  | callExpression_Yield
   ;
 
 //  PostfixExpression[Yield] :
 //   LeftHandSideExpression[?Yield]
 //   LeftHandSideExpression[?Yield] [no LineTerminator here] ++
 //   LeftHandSideExpression[?Yield] [no LineTerminator here] --
-PostfixExpression
-  : LeftHandSideExpression
-  | LeftHandSideExpression ~LineTerminator '++'
-  | LeftHandSideExpression ~LineTerminator '--'
+postfixExpression
+  : leftHandSideExpression
+  | leftHandSideExpression ~LineTerminator '++'
+  | leftHandSideExpression ~LineTerminator '--'
   ;
   
-PostfixExpression_Yield
-  : LeftHandSideExpression_Yield
-  | LeftHandSideExpression_Yield ~LineTerminator '++'
-  | LeftHandSideExpression_Yield ~LineTerminator '--'
+postfixExpression_Yield
+  : leftHandSideExpression_Yield
+  | leftHandSideExpression_Yield ~LineTerminator '++'
+  | leftHandSideExpression_Yield ~LineTerminator '--'
   ;
 
 //  UnaryExpression[Yield] :
@@ -1151,43 +1151,43 @@ PostfixExpression_Yield
 //   - UnaryExpression[?Yield]
 //   ~ UnaryExpression[?Yield]
 //   ! UnaryExpression[?Yield]
-UnaryExpression
-  : PostfixExpression
-  | 'delete' UnaryExpression
-  | 'void' UnaryExpression
-  | 'typeof' UnaryExpression
-  | '++' UnaryExpression
-  | '--' UnaryExpression
-  | '+' UnaryExpression
-  | '-' UnaryExpression
-  | '~' UnaryExpression
-  | '!' UnaryExpression
+unaryExpression
+  : postfixExpression
+  | 'delete' unaryExpression
+  | 'void' unaryExpression
+  | 'typeof' unaryExpression
+  | '++' unaryExpression
+  | '--' unaryExpression
+  | '+' unaryExpression
+  | '-' unaryExpression
+  | '~' unaryExpression
+  | '!' unaryExpression
   ;
 
-UnaryExpression_Yield
-  : PostfixExpression_Yield
-  | 'delete' UnaryExpression_Yield
-  | 'void' UnaryExpression_Yield
-  | 'typeof' UnaryExpression_Yield
-  | '++' UnaryExpression_Yield
-  | '--' UnaryExpression_Yield
-  | '+' UnaryExpression_Yield
-  | '-' UnaryExpression_Yield
-  | '~' UnaryExpression_Yield
-  | '!' UnaryExpression_Yield
+unaryExpression_Yield
+  : postfixExpression_Yield
+  | 'delete' unaryExpression_Yield
+  | 'void' unaryExpression_Yield
+  | 'typeof' unaryExpression_Yield
+  | '++' unaryExpression_Yield
+  | '--' unaryExpression_Yield
+  | '+' unaryExpression_Yield
+  | '-' unaryExpression_Yield
+  | '~' unaryExpression_Yield
+  | '!' unaryExpression_Yield
   ;
 
 //  MultiplicativeExpression[Yield] :
 //   UnaryExpression[?Yield]
 //   MultiplicativeExpression[?Yield] MultiplicativeOperator UnaryExpression[?Yield]
-MultiplicativeExpression
-  : UnaryExpression
-  | MultiplicativeExpression MultiplicativeOperator UnaryExpression
+multiplicativeExpression
+  : unaryExpression
+  | multiplicativeExpression MultiplicativeOperator unaryExpression
   ;
   
-MultiplicativeExpression_Yield
-  : UnaryExpression_Yield
-  | MultiplicativeExpression_Yield MultiplicativeOperator UnaryExpression_Yield
+multiplicativeExpression_Yield
+  : unaryExpression_Yield
+  | multiplicativeExpression_Yield MultiplicativeOperator unaryExpression_Yield
   ;
 
 //  MultiplicativeOperator : one of
@@ -1200,16 +1200,16 @@ MultiplicativeOperator
 //   MultiplicativeExpression[?Yield]
 //   AdditiveExpression[?Yield] + MultiplicativeExpression[?Yield]
 //   AdditiveExpression[?Yield] - MultiplicativeExpression[?Yield]
-AdditiveExpression
-  : MultiplicativeExpression
-  | AdditiveExpression '+' MultiplicativeExpression
-  | AdditiveExpression '-' MultiplicativeExpression
+additiveExpression
+  : multiplicativeExpression
+  | additiveExpression '+' multiplicativeExpression
+  | additiveExpression '-' multiplicativeExpression
   ;
 
-AdditiveExpression_Yield
-  : MultiplicativeExpression_Yield
-  | AdditiveExpression_Yield '+' MultiplicativeExpression_Yield
-  | AdditiveExpression_Yield '-' MultiplicativeExpression_Yield
+additiveExpression_Yield
+  : multiplicativeExpression_Yield
+  | additiveExpression_Yield '+' multiplicativeExpression_Yield
+  | additiveExpression_Yield '-' multiplicativeExpression_Yield
   ;
 
 //  ShiftExpression[Yield] :
@@ -1217,18 +1217,18 @@ AdditiveExpression_Yield
 //   ShiftExpression[?Yield] << AdditiveExpression[?Yield]
 //   ShiftExpression[?Yield] >> AdditiveExpression[?Yield]
 //   ShiftExpression[?Yield] >>> AdditiveExpression[?Yield]
-ShiftExpression
-  : AdditiveExpression
-  | ShiftExpression '<<' AdditiveExpression
-  | ShiftExpression '>>' AdditiveExpression
-  | ShiftExpression '>>>' AdditiveExpression
+shiftExpression
+  : additiveExpression
+  | shiftExpression '<<' additiveExpression
+  | shiftExpression '>>' additiveExpression
+  | shiftExpression '>>>' additiveExpression
   ;
 
-ShiftExpression_Yield
-  : AdditiveExpression_Yield
-  | ShiftExpression_Yield '<<' AdditiveExpression_Yield
-  | ShiftExpression_Yield '>>' AdditiveExpression_Yield
-  | ShiftExpression_Yield '>>>' AdditiveExpression_Yield
+shiftExpression_Yield
+  : additiveExpression_Yield
+  | shiftExpression_Yield '<<' additiveExpression_Yield
+  | shiftExpression_Yield '>>' additiveExpression_Yield
+  | shiftExpression_Yield '>>>' additiveExpression_Yield
   ;
 
 //  RelationalExpression[In, Yield] :
@@ -1239,42 +1239,42 @@ ShiftExpression_Yield
 //   RelationalExpression[?In, ?Yield] >= ShiftExpression[?Yield]
 //   RelationalExpression[?In, ?Yield] instanceof ShiftExpression[?Yield]
 //   [+In] RelationalExpression[In, ?Yield] in ShiftExpression[?Yield]
-RelationalExpression
-  : ShiftExpression
-  | RelationalExpression '<' ShiftExpression
-  | RelationalExpression '>' ShiftExpression
-  | RelationalExpression '<=' ShiftExpression
-  | RelationalExpression '>=' ShiftExpression
-  | RelationalExpression 'instanceof' ShiftExpression
+relationalExpression
+  : shiftExpression
+  | relationalExpression '<' shiftExpression
+  | relationalExpression '>' shiftExpression
+  | relationalExpression '<=' shiftExpression
+  | relationalExpression '>=' shiftExpression
+  | relationalExpression 'instanceof' shiftExpression
   ;
 
-RelationalExpression_In
-  : ShiftExpression
-  | RelationalExpression_In '<' ShiftExpression
-  | RelationalExpression_In '>' ShiftExpression
-  | RelationalExpression_In '<=' ShiftExpression
-  | RelationalExpression_In '>=' ShiftExpression
-  | RelationalExpression_In 'instanceof' ShiftExpression
-  | RelationalExpression_In 'in' ShiftExpression
+relationalExpression_In
+  : shiftExpression
+  | relationalExpression_In '<' shiftExpression
+  | relationalExpression_In '>' shiftExpression
+  | relationalExpression_In '<=' shiftExpression
+  | relationalExpression_In '>=' shiftExpression
+  | relationalExpression_In 'instanceof' shiftExpression
+  | relationalExpression_In 'in' shiftExpression
   ;
 
-RelationalExpression_Yield
-  : ShiftExpression_Yield
-  | RelationalExpression_Yield '<' ShiftExpression_Yield
-  | RelationalExpression_Yield '>' ShiftExpression_Yield
-  | RelationalExpression_Yield '<=' ShiftExpression_Yield
-  | RelationalExpression_Yield '>=' ShiftExpression_Yield
-  | RelationalExpression_Yield 'instanceof' ShiftExpression_Yield
+relationalExpression_Yield
+  : shiftExpression_Yield
+  | relationalExpression_Yield '<' shiftExpression_Yield
+  | relationalExpression_Yield '>' shiftExpression_Yield
+  | relationalExpression_Yield '<=' shiftExpression_Yield
+  | relationalExpression_Yield '>=' shiftExpression_Yield
+  | relationalExpression_Yield 'instanceof' shiftExpression_Yield
   ;
 
-RelationalExpression_In_Yield
-  : ShiftExpression_Yield
-  | RelationalExpression_In_Yield '<' ShiftExpression_Yield
-  | RelationalExpression_In_Yield '>' ShiftExpression_Yield
-  | RelationalExpression_In_Yield '<=' ShiftExpression_Yield
-  | RelationalExpression_In_Yield '>=' ShiftExpression_Yield
-  | RelationalExpression_In_Yield 'instanceof' ShiftExpression_Yield
-  | RelationalExpression_In_Yield 'in' ShiftExpression_Yield
+relationalExpression_In_Yield
+  : shiftExpression_Yield
+  | relationalExpression_In_Yield '<' shiftExpression_Yield
+  | relationalExpression_In_Yield '>' shiftExpression_Yield
+  | relationalExpression_In_Yield '<=' shiftExpression_Yield
+  | relationalExpression_In_Yield '>=' shiftExpression_Yield
+  | relationalExpression_In_Yield 'instanceof' shiftExpression_Yield
+  | relationalExpression_In_Yield 'in' shiftExpression_Yield
   ;
 
 //  EqualityExpression[In, Yield] :
@@ -1283,174 +1283,174 @@ RelationalExpression_In_Yield
 //   EqualityExpression[?In, ?Yield] != RelationalExpression[?In, ?Yield]
 //   EqualityExpression[?In, ?Yield] === RelationalExpression[?In, ?Yield]
 //   EqualityExpression[?In, ?Yield] !== RelationalExpression[?In, ?Yield]
-EqualityExpression
-  : RelationalExpression
-  | EqualityExpression '==' RelationalExpression
-  | EqualityExpression '!=' RelationalExpression
-  | EqualityExpression '===' RelationalExpression
-  | EqualityExpression '!==' RelationalExpression
+equalityExpression
+  : relationalExpression
+  | equalityExpression '==' relationalExpression
+  | equalityExpression '!=' relationalExpression
+  | equalityExpression '===' relationalExpression
+  | equalityExpression '!==' relationalExpression
   ;
 
-EqualityExpression_In
-  : RelationalExpression_In
-  | EqualityExpression_In '==' RelationalExpression_In
-  | EqualityExpression_In '!=' RelationalExpression_In
-  | EqualityExpression_In '===' RelationalExpression_In
-  | EqualityExpression_In '!==' RelationalExpression_In
+equalityExpression_In
+  : relationalExpression_In
+  | equalityExpression_In '==' relationalExpression_In
+  | equalityExpression_In '!=' relationalExpression_In
+  | equalityExpression_In '===' relationalExpression_In
+  | equalityExpression_In '!==' relationalExpression_In
   ;
 
-EqualityExpression_Yield
-  : RelationalExpression_Yield
-  | EqualityExpression_Yield '==' RelationalExpression_Yield
-  | EqualityExpression_Yield '!=' RelationalExpression_Yield
-  | EqualityExpression_Yield '===' RelationalExpression_Yield
-  | EqualityExpression_Yield '!==' RelationalExpression_Yield
+equalityExpression_Yield
+  : relationalExpression_Yield
+  | equalityExpression_Yield '==' relationalExpression_Yield
+  | equalityExpression_Yield '!=' relationalExpression_Yield
+  | equalityExpression_Yield '===' relationalExpression_Yield
+  | equalityExpression_Yield '!==' relationalExpression_Yield
   ;
 
-EqualityExpression_In_Yield
-  : RelationalExpression_In_Yield
-  | EqualityExpression_In_Yield '==' RelationalExpression_In_Yield
-  | EqualityExpression_In_Yield '!=' RelationalExpression_In_Yield
-  | EqualityExpression_In_Yield '===' RelationalExpression_In_Yield
-  | EqualityExpression_In_Yield '!==' RelationalExpression_In_Yield
+equalityExpression_In_Yield
+  : relationalExpression_In_Yield
+  | equalityExpression_In_Yield '==' relationalExpression_In_Yield
+  | equalityExpression_In_Yield '!=' relationalExpression_In_Yield
+  | equalityExpression_In_Yield '===' relationalExpression_In_Yield
+  | equalityExpression_In_Yield '!==' relationalExpression_In_Yield
   ;
 
 //  BitwiseANDExpression[In, Yield] :
 //   EqualityExpression[?In, ?Yield]
 //   BitwiseANDExpression[?In, ?Yield] & EqualityExpression[?In, ?Yield]
-BitwiseANDExpression
-  : EqualityExpression
-  | BitwiseANDExpression '&' EqualityExpression
+bitwiseANDExpression
+  : equalityExpression
+  | bitwiseANDExpression '&' equalityExpression
   ;
 
-BitwiseANDExpression_In
-  : EqualityExpression_In
-  | BitwiseANDExpression_In '&' EqualityExpression_In
+bitwiseANDExpression_In
+  : equalityExpression_In
+  | bitwiseANDExpression_In '&' equalityExpression_In
   ;
 
-BitwiseANDExpression_Yield
-  : EqualityExpression_Yield
-  | BitwiseANDExpression_Yield '&' EqualityExpression_Yield
+bitwiseANDExpression_Yield
+  : equalityExpression_Yield
+  | bitwiseANDExpression_Yield '&' equalityExpression_Yield
   ;
 
-BitwiseANDExpression_In_Yield
-  : EqualityExpression_In_Yield
-  | BitwiseANDExpression_In_Yield '&' EqualityExpression_In_Yield
+bitwiseANDExpression_In_Yield
+  : equalityExpression_In_Yield
+  | bitwiseANDExpression_In_Yield '&' equalityExpression_In_Yield
   ;
 
 //  BitwiseXORExpression[In, Yield] :
 //   BitwiseANDExpression[?In, ?Yield]
 //   BitwiseXORExpression[?In, ?Yield] ^ BitwiseANDExpression[?In, ?Yield]
-BitwiseXORExpression
-  : BitwiseANDExpression
-  | BitwiseXORExpression '^' BitwiseANDExpression
+bitwiseXORExpression
+  : bitwiseANDExpression
+  | bitwiseXORExpression '^' bitwiseANDExpression
   ;
 
-BitwiseXORExpression_In
-  : BitwiseANDExpression_In
-  | BitwiseXORExpression_In '^' BitwiseANDExpression_In
+bitwiseXORExpression_In
+  : bitwiseANDExpression_In
+  | bitwiseXORExpression_In '^' bitwiseANDExpression_In
   ;
 
-BitwiseXORExpression_Yield
-  : BitwiseANDExpression_Yield
-  | BitwiseXORExpression_Yield '^' BitwiseANDExpression_Yield
+bitwiseXORExpression_Yield
+  : bitwiseANDExpression_Yield
+  | bitwiseXORExpression_Yield '^' bitwiseANDExpression_Yield
   ;
 
-BitwiseXORExpression_In_Yield
-  : BitwiseANDExpression_In_Yield
-  | BitwiseXORExpression_In_Yield '^' BitwiseANDExpression_In_Yield
+bitwiseXORExpression_In_Yield
+  : bitwiseANDExpression_In_Yield
+  | bitwiseXORExpression_In_Yield '^' bitwiseANDExpression_In_Yield
   ;
 
 //  BitwiseORExpression[In, Yield] :
 //   BitwiseXORExpression[?In, ?Yield]
 //   BitwiseORExpression[?In, ?Yield] | BitwiseXORExpression[?In, ?Yield]
-BitwiseORExpression
-  : BitwiseXORExpression
-  | BitwiseORExpression '|' BitwiseXORExpression
+bitwiseORExpression
+  : bitwiseXORExpression
+  | bitwiseORExpression '|' bitwiseXORExpression
   ;
 
-BitwiseORExpression_In
-  : BitwiseXORExpression_In
-  | BitwiseORExpression_In '|' BitwiseXORExpression_In
+bitwiseORExpression_In
+  : bitwiseXORExpression_In
+  | bitwiseORExpression_In '|' bitwiseXORExpression_In
   ;
 
-BitwiseORExpression_Yield
-  : BitwiseXORExpression_Yield
-  | BitwiseORExpression_Yield '|' BitwiseXORExpression_Yield
+bitwiseORExpression_Yield
+  : bitwiseXORExpression_Yield
+  | bitwiseORExpression_Yield '|' bitwiseXORExpression_Yield
   ;
 
-BitwiseORExpression_In_Yield
-  : BitwiseXORExpression_In_Yield
-  | BitwiseORExpression_In_Yield '|' BitwiseXORExpression_In_Yield
+bitwiseORExpression_In_Yield
+  : bitwiseXORExpression_In_Yield
+  | bitwiseORExpression_In_Yield '|' bitwiseXORExpression_In_Yield
   ;
 
 //  LogicalANDExpression[In, Yield] :
 //   BitwiseORExpression[?In, ?Yield]
 //   LogicalANDExpression[?In, ?Yield] && BitwiseORExpression[?In, ?Yield]
-LogicalANDExpression
-  : BitwiseORExpression
-  | LogicalANDExpression '&&' BitwiseORExpression
+logicalANDExpression
+  : bitwiseORExpression
+  | logicalANDExpression '&&' bitwiseORExpression
   ;
 
-LogicalANDExpression_In
-  : BitwiseORExpression_In
-  | LogicalANDExpression_In '&&' BitwiseORExpression_In
+logicalANDExpression_In
+  : bitwiseORExpression_In
+  | logicalANDExpression_In '&&' bitwiseORExpression_In
   ;
 
-LogicalANDExpression_Yield
-  : BitwiseORExpression_Yield
-  | LogicalANDExpression_Yield '&&' BitwiseORExpression_Yield
+logicalANDExpression_Yield
+  : bitwiseORExpression_Yield
+  | logicalANDExpression_Yield '&&' bitwiseORExpression_Yield
   ;
 
-LogicalANDExpression_In_Yield
-  : BitwiseORExpression_In_Yield
-  | LogicalANDExpression_In_Yield '&&' BitwiseORExpression_In_Yield
+logicalANDExpression_In_Yield
+  : bitwiseORExpression_In_Yield
+  | logicalANDExpression_In_Yield '&&' bitwiseORExpression_In_Yield
   ;
 
 //  LogicalORExpression[In, Yield] :
 //   LogicalANDExpression[?In, ?Yield]
 //   LogicalORExpression[?In, ?Yield] || LogicalANDExpression[?In, ?Yield]
-LogicalORExpression
-  : LogicalANDExpression
-  | LogicalORExpression '||' LogicalANDExpression
+logicalORExpression
+  : logicalANDExpression
+  | logicalORExpression '||' logicalANDExpression
   ;
 
-LogicalORExpression_In
-  : LogicalANDExpression_In
-  | LogicalORExpression_In '||' LogicalANDExpression_In
+logicalORExpression_In
+  : logicalANDExpression_In
+  | logicalORExpression_In '||' logicalANDExpression_In
   ;
 
-LogicalORExpression_Yield
-  : LogicalANDExpression_Yield
-  | LogicalORExpression_Yield '||' LogicalANDExpression_Yield
+logicalORExpression_Yield
+  : logicalANDExpression_Yield
+  | logicalORExpression_Yield '||' logicalANDExpression_Yield
   ;
 
-LogicalORExpression_In_Yield
-  : LogicalANDExpression_In_Yield
-  | LogicalORExpression_In_Yield '||' LogicalANDExpression_In_Yield
+logicalORExpression_In_Yield
+  : logicalANDExpression_In_Yield
+  | logicalORExpression_In_Yield '||' logicalANDExpression_In_Yield
   ;
 
 //  ConditionalExpression[In, Yield] :
 //   LogicalORExpression[?In, ?Yield]
 //   LogicalORExpression[?In, ?Yield] ? AssignmentExpression[In, ?Yield] : AssignmentExpression[?In, ?Yield]
-  ConditionalExpression
-  : LogicalORExpression
-  | LogicalORExpression '?' AssignmentExpression_In ':' AssignmentExpression
+conditionalExpression
+  : logicalORExpression
+  | logicalORExpression '?' assignmentExpression_In ':' assignmentExpression
   ;
 
-  ConditionalExpression_In
-  : LogicalORExpression_In
-  | LogicalORExpression_In '?' AssignmentExpression_In ':' AssignmentExpression_In
+conditionalExpression_In
+  : logicalORExpression_In
+  | logicalORExpression_In '?' assignmentExpression_In ':' assignmentExpression_In
   ;
 
-  ConditionalExpression_Yield
-  : LogicalORExpression_Yield
-  | LogicalORExpression_Yield '?' AssignmentExpression_In_Yield ':' AssignmentExpression_Yield
+conditionalExpression_Yield
+  : logicalORExpression_Yield
+  | logicalORExpression_Yield '?' assignmentExpression_In_Yield ':' assignmentExpression_Yield
   ;
 
-  ConditionalExpression_In_Yield
-  : LogicalORExpression_In_Yield
-  | LogicalORExpression_In_Yield '?' AssignmentExpression_In_Yield ':' AssignmentExpression_In_Yield
+conditionalExpression_In_Yield
+  : logicalORExpression_In_Yield
+  | logicalORExpression_In_Yield '?' assignmentExpression_In_Yield ':' assignmentExpression_In_Yield
   ;
 
 //  AssignmentExpression[In, Yield] :
@@ -1459,40 +1459,40 @@ LogicalORExpression_In_Yield
 //   ArrowFunction[?In, ?Yield]
 //   LeftHandSideExpression[?Yield] = AssignmentExpression[?In, ?Yield]
 //   LeftHandSideExpression[?Yield] AssignmentOperator AssignmentExpression[?In, ?Yield]
-AssignmentExpression
-   : ConditionalExpression
-   | ArrowFunction
-   | LeftHandSideExpression '=' AssignmentExpression
-   | LeftHandSideExpression AssignmentOperator AssignmentExpression
+assignmentExpression
+   : conditionalExpression
+   | arrowFunction
+   | leftHandSideExpression '=' assignmentExpression
+   | leftHandSideExpression AssignmentOperator assignmentExpression
    ;
 
-AssignmentExpression_In
-   : ConditionalExpression_In
-   | ArrowFunction_In
-   | LeftHandSideExpression '=' AssignmentExpression_In
-   | LeftHandSideExpression AssignmentOperator AssignmentExpression_In
+assignmentExpression_In
+   : conditionalExpression_In
+   | arrowFunction_In
+   | leftHandSideExpression '=' assignmentExpression_In
+   | leftHandSideExpression AssignmentOperator assignmentExpression_In
    ;
 
-AssignmentExpression_Yield
-   : ConditionalExpression_Yield
-   | YieldExpression
-   | ArrowFunction_Yield
-   | LeftHandSideExpression_Yield '=' AssignmentExpression_Yield
-   | LeftHandSideExpression_Yield AssignmentOperator AssignmentExpression_Yield
+assignmentExpression_Yield
+   : conditionalExpression_Yield
+   | yieldExpression
+   | arrowFunction_Yield
+   | leftHandSideExpression_Yield '=' assignmentExpression_Yield
+   | leftHandSideExpression_Yield AssignmentOperator assignmentExpression_Yield
    ;
 
-AssignmentExpression_In_Yield
-   : ConditionalExpression_In_Yield
-   | YieldExpression_In
-   | ArrowFunction_In_Yield
-   | LeftHandSideExpression_Yield '=' AssignmentExpression_In_Yield
-   | LeftHandSideExpression_Yield AssignmentOperator AssignmentExpression_In_Yield
+assignmentExpression_In_Yield
+   : conditionalExpression_In_Yield
+   | yieldExpression_In
+   | arrowFunction_In_Yield
+   | leftHandSideExpression_Yield '=' assignmentExpression_In_Yield
+   | leftHandSideExpression_Yield AssignmentOperator assignmentExpression_In_Yield
    ;
 
 //  AssignmentOperator : one of
 //   *=    /=    %=    +=    -=    <<=   >>=   >>>=  &=    ^=
 //   |=
-  AssignmentOperator
+AssignmentOperator
    : '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^='
    | '|='
    ;
@@ -1500,24 +1500,24 @@ AssignmentExpression_In_Yield
 //  Expression[In, Yield] :
 //   AssignmentExpression[?In, ?Yield]
 //   Expression[?In, ?Yield] , AssignmentExpression[?In, ?Yield]
-Expression
-   : AssignmentExpression
-   | Expression ',' AssignmentExpression
+expression
+   : assignmentExpression
+   | expression ',' assignmentExpression
    ;
 
-Expression_In
-   : AssignmentExpression_In
-   | Expression_In ',' AssignmentExpression_In
+expression_In
+   : assignmentExpression_In
+   | expression_In ',' assignmentExpression_In
    ;
 
-Expression_Yield
-   : AssignmentExpression_Yield
-   | Expression_Yield ',' AssignmentExpression_Yield
+expression_Yield
+   : assignmentExpression_Yield
+   | expression_Yield ',' assignmentExpression_Yield
    ;
 
-Expression_In_Yield
-   : AssignmentExpression_In_Yield
-   | Expression_In_Yield ',' AssignmentExpression_In_Yield
+expression_In_Yield
+   : assignmentExpression_In_Yield
+   | expression_In_Yield ',' assignmentExpression_In_Yield
    ;
 
 //  Statement[Yield, Return] :
@@ -1535,69 +1535,69 @@ Expression_In_Yield
 //   ThrowStatement[?Yield]
 //   TryStatement[?Yield, ?Return]
 //   DebuggerStatement
-Statement
-  : BlockStatement
-  | VariableStatement
+statement
+  : blockStatement
+  | variableStatement
   | EmptyStatement
-  | ExpressionStatement
-  | IfStatement
-  | BreakableStatement
-  | ContinueStatement
-  | BreakStatement
-  | WithStatement
-  | LabelledStatement
-  | ThrowStatement
-  | TryStatement
+  | expressionStatement
+  | ifStatement
+  | breakableStatement
+  | continueStatement
+  | breakStatement
+  | withStatement
+  | labelledStatement
+  | throwStatement
+  | tryStatement
   | DebuggerStatement
   ;
 
-Statement_Yield
-  : BlockStatement_Yield
-  | VariableStatement_Yield
+statement_Yield
+  : blockStatement_Yield
+  | variableStatement_Yield
   | EmptyStatement
-  | ExpressionStatement_Yield
-  | IfStatement_Yield
-  | BreakableStatement_Yield
-  | ContinueStatement_Yield
-  | BreakStatement_Yield
-  | WithStatement_Yield
-  | LabelledStatement_Yield
-  | ThrowStatement_Yield
-  | TryStatement_Yield
+  | expressionStatement_Yield
+  | ifStatement_Yield
+  | breakableStatement_Yield
+  | continueStatement_Yield
+  | breakStatement_Yield
+  | withStatement_Yield
+  | labelledStatement_Yield
+  | throwStatement_Yield
+  | tryStatement_Yield
   | DebuggerStatement
   ;
 
-Statement_Return
-  : BlockStatement_Return
-  | VariableStatement
+statement_Return
+  : blockStatement_Return
+  | variableStatement
   | EmptyStatement
-  | ExpressionStatement
-  | IfStatement_Return
-  | BreakableStatement_Return
-  | ContinueStatement
-  | BreakStatement
-  | ReturnStatement
-  | WithStatement_Return
-  | LabelledStatement_Return
-  | ThrowStatement
-  | TryStatement_Return
+  | expressionStatement
+  | ifStatement_Return
+  | breakableStatement_Return
+  | continueStatement
+  | breakStatement
+  | returnStatement
+  | withStatement_Return
+  | labelledStatement_Return
+  | throwStatement
+  | tryStatement_Return
   | DebuggerStatement
   ;
 
-Statement_Yield_Return
-  : BlockStatement_Yield_Return
-  | VariableStatement_Yield
+statement_Yield_Return
+  : blockStatement_Yield_Return
+  | variableStatement_Yield
   | EmptyStatement
-  | ExpressionStatement_Yield
-  | IfStatement_Yield_Return
-  | BreakableStatement_Yield_Return
-  | ContinueStatement_Yield
-  | BreakStatement_Yield
-  | ReturnStatement_Yield
-  | WithStatement_Yield_Return
-  | LabelledStatement_Yield_Return
-  | ThrowStatement_Yield
-  | TryStatement_Yield_Return
+  | expressionStatement_Yield
+  | ifStatement_Yield_Return
+  | breakableStatement_Yield_Return
+  | continueStatement_Yield
+  | breakStatement_Yield
+  | returnStatement_Yield
+  | withStatement_Yield_Return
+  | labelledStatement_Yield_Return
+  | throwStatement_Yield
+  | tryStatement_Yield_Return
   | DebuggerStatement
   ;
 
@@ -1605,159 +1605,159 @@ Statement_Yield_Return
 //   HoistableDeclaration[?Yield]
 //   ClassDeclaration[?Yield]
 //   LexicalDeclaration[In, ?Yield]
-Declaration
-  : HoistableDeclaration
-  | ClassDeclaration
-  | LexicalDeclaration_In
+declaration
+  : hoistableDeclaration
+  | classDeclaration
+  | lexicalDeclaration_In
   ;
 
-Declaration_Yield
-  : HoistableDeclaration_Yield
-  | ClassDeclaration_Yield
-  | LexicalDeclaration_In_Yield
+declaration_Yield
+  : hoistableDeclaration_Yield
+  | classDeclaration_Yield
+  | lexicalDeclaration_In_Yield
   ;
 
 //  HoistableDeclaration[Yield, Default] :
 //   FunctionDeclaration[?Yield, ?Default]
 //   GeneratorDeclaration[?Yield, ?Default]
-HoistableDeclaration
-  : FunctionDeclaration
-  | GeneratorDeclaration
+hoistableDeclaration
+  : functionDeclaration
+  | generatorDeclaration
   ;
 
-HoistableDeclaration_Yield
-  : FunctionDeclaration_Yield
-  | GeneratorDeclaration_Yield
+hoistableDeclaration_Yield
+  : functionDeclaration_Yield
+  | generatorDeclaration_Yield
   ;
 
-HoistableDeclaration_Default
-  : FunctionDeclaration_Default
-  | GeneratorDeclaration_Default
+hoistableDeclaration_Default
+  : functionDeclaration_Default
+  | generatorDeclaration_Default
   ;
 
-HoistableDeclaration_Yield_Default
-  : FunctionDeclaration_Yield_Default
-  | GeneratorDeclaration_Yield_Default
+hoistableDeclaration_Yield_Default
+  : functionDeclaration_Yield_Default
+  | generatorDeclaration_Yield_Default
   ;
 
 //  BreakableStatement[Yield, Return] :
 //   IterationStatement[?Yield, ?Return]
 //   SwitchStatement[?Yield, ?Return]
-BreakableStatement
-  : IterationStatement
-  | SwitchStatement
+breakableStatement
+  : iterationStatement
+  | switchStatement
   ;
 
-BreakableStatement_Yield
-  : IterationStatement_Yield
-  | SwitchStatement_Yield
+breakableStatement_Yield
+  : iterationStatement_Yield
+  | switchStatement_Yield
   ;
 
-BreakableStatement_Return
-  : IterationStatement_Return
-  | SwitchStatement_Return
+breakableStatement_Return
+  : iterationStatement_Return
+  | switchStatement_Return
   ;
 
-BreakableStatement_Yield_Return
-  : IterationStatement_Yield_Return
-  | SwitchStatement_Yield_Return
+breakableStatement_Yield_Return
+  : iterationStatement_Yield_Return
+  | switchStatement_Yield_Return
   ;
 
 //  BlockStatement[Yield, Return] :
 //   Block[?Yield, ?Return]
-BlockStatement
-  : Block
+blockStatement
+  : block
   ;
 
-BlockStatement_Yield
-  : Block_Yield
+blockStatement_Yield
+  : block_Yield
   ;
 
-BlockStatement_Return
-  : Block_Return
+blockStatement_Return
+  : block_Return
   ;
 
-BlockStatement_Yield_Return
-  : Block_Yield_Return
+blockStatement_Yield_Return
+  : block_Yield_Return
   ;
 
 //  Block[Yield, Return] :
 //   { StatementList[?Yield, ?Return]opt }
-Block
-  : '{' StatementList? '}'
+block
+  : '{' statementList? '}'
   ;
 
-Block_Yield
-  : '{' StatementList_Yield? '}'
+block_Yield
+  : '{' statementList_Yield? '}'
   ;
 
-Block_Return
-  : '{' StatementList_Return? '}'
+block_Return
+  : '{' statementList_Return? '}'
   ;
 
-Block_Yield_Return
-  : '{' StatementList_Yield_Return? '}'
+block_Yield_Return
+  : '{' statementList_Yield_Return? '}'
   ;
 
 //  StatementList[Yield, Return] :
 //   StatementListItem[?Yield, ?Return]
 //   StatementList[?Yield, ?Return] StatementListItem[?Yield, ?Return]
-StatementList
-  : StatementListItem
-  | StatementList StatementListItem
+statementList
+  : statementListItem
+  | statementList statementListItem
   ;
 
-StatementList_Yield
-  : StatementListItem_Yield
-  | StatementList_Yield StatementListItem_Yield
+statementList_Yield
+  : statementListItem_Yield
+  | statementList_Yield statementListItem_Yield
   ;
 
-StatementList_Return
-  : StatementListItem_Return
-  | StatementList_Return StatementListItem_Return
+statementList_Return
+  : statementListItem_Return
+  | statementList_Return statementListItem_Return
   ;
 
-StatementList_Yield_Return
-  : StatementListItem_Yield_Return
-  | StatementList_Yield_Return StatementListItem_Yield_Return
+statementList_Yield_Return
+  : statementListItem_Yield_Return
+  | statementList_Yield_Return statementListItem_Yield_Return
   ;
 
 //  StatementListItem[Yield, Return] :
 //   Statement[?Yield, ?Return]
 //   Declaration[?Yield]
-StatementListItem
-  : Statement
-  | Declaration
+statementListItem
+  : statement
+  | declaration
   ;
-StatementListItem_Yield
-  : Statement_Yield
-  | Declaration_Yield
+statementListItem_Yield
+  : statement_Yield
+  | declaration_Yield
   ;
-StatementListItem_Return
-  : Statement_Return
-  | Declaration
+statementListItem_Return
+  : statement_Return
+  | declaration
   ;
-StatementListItem_Yield_Return
-  : Statement_Yield_Return
-  | Declaration_Yield
+statementListItem_Yield_Return
+  : statement_Yield_Return
+  | declaration_Yield
   ;
 
 //  LexicalDeclaration[In, Yield] :
 //   LetOrConst BindingList[?In, ?Yield] ;
-LexicalDeclaration
-  : LetOrConst BindingList ';'
+lexicalDeclaration
+  : LetOrConst bindingList ';'
   ;
 
-LexicalDeclaration_In
-  : LetOrConst BindingList_In ';'
+lexicalDeclaration_In
+  : LetOrConst bindingList_In ';'
   ;
 
-LexicalDeclaration_Yield
-  : LetOrConst BindingList_Yield ';'
+lexicalDeclaration_Yield
+  : LetOrConst bindingList_Yield ';'
   ;
 
-LexicalDeclaration_In_Yield
-  : LetOrConst BindingList_In_Yield ';'
+lexicalDeclaration_In_Yield
+  : LetOrConst bindingList_In_Yield ';'
   ;
 
 //  LetOrConst :
@@ -1771,224 +1771,224 @@ LetOrConst
 //  BindingList[In, Yield] :
 //   LexicalBinding[?In, ?Yield]
 //   BindingList[?In, ?Yield] , LexicalBinding[?In, ?Yield]
-BindingList
-  : LexicalBinding
-  | BindingList ',' LexicalBinding
+bindingList
+  : lexicalBinding
+  | bindingList ',' lexicalBinding
   ;
 
-BindingList_In
-  : LexicalBinding_In
-  | BindingList_In ',' LexicalBinding_In
+bindingList_In
+  : lexicalBinding_In
+  | bindingList_In ',' lexicalBinding_In
   ;
 
-BindingList_Yield
-  : LexicalBinding_Yield
-  | BindingList_Yield ',' LexicalBinding_Yield
+bindingList_Yield
+  : lexicalBinding_Yield
+  | bindingList_Yield ',' lexicalBinding_Yield
   ;
 
-BindingList_In_Yield
-  : LexicalBinding_In_Yield
-  | BindingList_In_Yield ',' LexicalBinding_In_Yield
+bindingList_In_Yield
+  : lexicalBinding_In_Yield
+  | bindingList_In_Yield ',' lexicalBinding_In_Yield
   ;
 
 //  LexicalBinding[In, Yield] :
 //   BindingIdentifier[?Yield] Initializer[?In, ?Yield]opt
 //   BindingPattern[?Yield] Initializer[?In, ?Yield]
-LexicalBinding
-  : BindingIdentifier Initializer?
-  | BindingPattern Initializer
+lexicalBinding
+  : bindingIdentifier initializer?
+  | bindingPattern initializer
   ;
 
-LexicalBinding_In
-  : BindingIdentifier Initializer_In?
-  | BindingPattern Initializer_In
+lexicalBinding_In
+  : bindingIdentifier initializer_In?
+  | bindingPattern initializer_In
   ;
 
-LexicalBinding_Yield
-  : BindingIdentifier_Yield Initializer_Yield?
-  | BindingPattern_Yield Initializer_Yield
+lexicalBinding_Yield
+  : bindingIdentifier_Yield initializer_Yield?
+  | bindingPattern_Yield initializer_Yield
   ;
 
-LexicalBinding_In_Yield
-  : BindingIdentifier_Yield Initializer_In_Yield?
-  | BindingPattern_Yield Initializer_In_Yield
+lexicalBinding_In_Yield
+  : bindingIdentifier_Yield initializer_In_Yield?
+  | bindingPattern_Yield initializer_In_Yield
   ;
 
 //  VariableStatement[Yield] :
 //   var VariableDeclarationList[In, ?Yield] ;
-VariableStatement
-  : 'var' VariableDeclarationList_In ';'
+variableStatement
+  : 'var' variableDeclarationList_In ';'
   ;
 
-VariableStatement_Yield
-  : 'var' VariableDeclarationList_In_Yield ';'
+variableStatement_Yield
+  : 'var' variableDeclarationList_In_Yield ';'
   ;
 
 //  VariableDeclarationList[In, Yield] :
 //   VariableDeclaration[?In, ?Yield]
 //   VariableDeclarationList[?In, ?Yield] , VariableDeclaration[?In, ?Yield]
-VariableDeclarationList
-  : VariableDeclaration
-  | VariableDeclarationList ',' VariableDeclaration
+variableDeclarationList
+  : variableDeclaration
+  | variableDeclarationList ',' variableDeclaration
   ;
 
-VariableDeclarationList_In
-  : VariableDeclaration_In
-  | VariableDeclarationList_In ',' VariableDeclaration_In
+variableDeclarationList_In
+  : variableDeclaration_In
+  | variableDeclarationList_In ',' variableDeclaration_In
   ;
 
-VariableDeclarationList_Yield
-  : VariableDeclaration_Yield
-  | VariableDeclarationList_Yield ',' VariableDeclaration_Yield
+variableDeclarationList_Yield
+  : variableDeclaration_Yield
+  | variableDeclarationList_Yield ',' variableDeclaration_Yield
   ;
 
-VariableDeclarationList_In_Yield
-  : VariableDeclaration_In_Yield
-  | VariableDeclarationList_In_Yield ',' VariableDeclaration_In_Yield
+variableDeclarationList_In_Yield
+  : variableDeclaration_In_Yield
+  | variableDeclarationList_In_Yield ',' variableDeclaration_In_Yield
   ;
 
 //  VariableDeclaration[In, Yield] :
 //   BindingIdentifier[?Yield] Initializer[?In, ?Yield]opt
 //   BindingPattern[?Yield] Initializer[?In, ?Yield]
-VariableDeclaration
-  : BindingIdentifier Initializer?
-  | BindingPattern Initializer
+variableDeclaration
+  : bindingIdentifier initializer?
+  | bindingPattern initializer
   ;
-VariableDeclaration_In
-  : BindingIdentifier Initializer_In?
-  | BindingPattern Initializer_In
+variableDeclaration_In
+  : bindingIdentifier initializer_In?
+  | bindingPattern initializer_In
   ;
-VariableDeclaration_Yield
-  : BindingIdentifier_Yield Initializer_Yield?
-  | BindingPattern_Yield Initializer_Yield
+variableDeclaration_Yield
+  : bindingIdentifier_Yield initializer_Yield?
+  | bindingPattern_Yield initializer_Yield
   ;
-VariableDeclaration_In_Yield
-  : BindingIdentifier_Yield Initializer_In_Yield?
-  | BindingPattern_Yield Initializer_In_Yield
+variableDeclaration_In_Yield
+  : bindingIdentifier_Yield initializer_In_Yield?
+  | bindingPattern_Yield initializer_In_Yield
   ;
 
 //  BindingPattern[Yield] :
 //   ObjectBindingPattern[?Yield]
 //   ArrayBindingPattern[?Yield]
-BindingPattern
-  : ObjectBindingPattern
-  | ArrayBindingPattern
+bindingPattern
+  : objectBindingPattern
+  | arrayBindingPattern
   ;
 
-BindingPattern_Yield
-  : ObjectBindingPattern_Yield
-  | ArrayBindingPattern_Yield
+bindingPattern_Yield
+  : objectBindingPattern_Yield
+  | arrayBindingPattern_Yield
   ;
 
 //  ObjectBindingPattern[Yield] :
 //   { }
 //   { BindingPropertyList[?Yield] }
 //   { BindingPropertyList[?Yield] , }
-ObjectBindingPattern
+objectBindingPattern
   : '{' '}'
-  | '{' BindingPropertyList '}'
-  | '{' BindingPropertyList ',' '}'
+  | '{' bindingPropertyList '}'
+  | '{' bindingPropertyList ',' '}'
   ;
-ObjectBindingPattern_Yield
+objectBindingPattern_Yield
   : '{' '}'
-  | '{' BindingPropertyList_Yield '}'
-  | '{' BindingPropertyList_Yield ',' '}'
+  | '{' bindingPropertyList_Yield '}'
+  | '{' bindingPropertyList_Yield ',' '}'
   ;
 
 //  ArrayBindingPattern[Yield] :
 //   [ Elisionopt BindingRestElement[?Yield]opt ]
 //   [ BindingElementList[?Yield] ]
 //   [ BindingElementList[?Yield] , Elisionopt BindingRestElement[?Yield]opt ]
-ArrayBindingPattern
-  : '[' Elision? BindingRestElement? ']'
-  | '[' BindingElementList ']'
-  | '[' BindingElementList ',' Elision? BindingRestElement? ']'
+arrayBindingPattern
+  : '[' Elision? bindingRestElement? ']'
+  | '[' bindingElementList ']'
+  | '[' bindingElementList ',' Elision? bindingRestElement? ']'
   ;
 
-ArrayBindingPattern_Yield
-  : '[' Elision? BindingRestElement_Yield? ']'
-  | '[' BindingElementList_Yield ']'
-  | '[' BindingElementList_Yield ',' Elision? BindingRestElement_Yield? ']'
+arrayBindingPattern_Yield
+  : '[' Elision? bindingRestElement_Yield? ']'
+  | '[' bindingElementList_Yield ']'
+  | '[' bindingElementList_Yield ',' Elision? bindingRestElement_Yield? ']'
   ;
 
 //  BindingPropertyList[Yield] :
 //   BindingProperty[?Yield]
 //   BindingPropertyList[?Yield] , BindingProperty[?Yield]
-BindingPropertyList
-  : BindingProperty
-  | BindingPropertyList ',' BindingProperty
+bindingPropertyList
+  : bindingProperty
+  | bindingPropertyList ',' bindingProperty
   ;
-BindingPropertyList_Yield
-  : BindingProperty_Yield
-  | BindingPropertyList_Yield ',' BindingProperty_Yield
+bindingPropertyList_Yield
+  : bindingProperty_Yield
+  | bindingPropertyList_Yield ',' bindingProperty_Yield
   ;
 
 //  BindingElementList[Yield] :
 //   BindingElisionElement[?Yield]
 //   BindingElementList[?Yield] , BindingElisionElement[?Yield]
-BindingElementList
-  : BindingElisionElement
-  | BindingElementList ',' BindingElisionElement
+bindingElementList
+  : bindingElisionElement
+  | bindingElementList ',' bindingElisionElement
   ;
 
-BindingElementList_Yield
-  : BindingElisionElement_Yield
-  | BindingElementList_Yield ',' BindingElisionElement_Yield
+bindingElementList_Yield
+  : bindingElisionElement_Yield
+  | bindingElementList_Yield ',' bindingElisionElement_Yield
   ;
 
 //  BindingElisionElement[Yield] :
 //   Elisionopt BindingElement[?Yield]
-BindingElisionElement
-  : Elision? BindingElement
+bindingElisionElement
+  : Elision? bindingElement
   ;
-BindingElisionElement_Yield
-  : Elision? BindingElement_Yield
+bindingElisionElement_Yield
+  : Elision? bindingElement_Yield
   ;
 
 //  BindingProperty[Yield] :
 //   SingleNameBinding[?Yield]
 //   PropertyName[?Yield] : BindingElement[?Yield]
-BindingProperty
-  : SingleNameBinding
-  | PropertyName ':' BindingElement
+bindingProperty
+  : singleNameBinding
+  | propertyName ':' bindingElement
   ;
 
-BindingProperty_Yield
-  : SingleNameBinding_Yield
-  | PropertyName_Yield ':' BindingElement_Yield
+bindingProperty_Yield
+  : singleNameBinding_Yield
+  | propertyName_Yield ':' bindingElement_Yield
   ;
 
 //  BindingElement[Yield] :
 //   SingleNameBinding[?Yield]
 //   BindingPattern[?Yield] Initializer[In, ?Yield]opt
-BindingElement
-  : SingleNameBinding
-  | BindingPattern Initializer_In?
+bindingElement
+  : singleNameBinding
+  | bindingPattern initializer_In?
   ;
 
-BindingElement_Yield
-  : SingleNameBinding_Yield
-  | BindingPattern_Yield Initializer_In_Yield?
+bindingElement_Yield
+  : singleNameBinding_Yield
+  | bindingPattern_Yield initializer_In_Yield?
   ;
 
 //  SingleNameBinding[Yield] :
 //   BindingIdentifier[?Yield] Initializer[In, ?Yield]opt
-SingleNameBinding
-  : BindingIdentifier Initializer?
+singleNameBinding
+  : bindingIdentifier initializer?
   ;
 
-SingleNameBinding_Yield
-  : BindingIdentifier_Yield Initializer_In_Yield?
+singleNameBinding_Yield
+  : bindingIdentifier_Yield initializer_In_Yield?
   ;
 
 //  BindingRestElement[Yield] :
 //   ... BindingIdentifier[?Yield]
-BindingRestElement
-  : '...' BindingIdentifier
+bindingRestElement
+  : '...' bindingIdentifier
   ;
 
-BindingRestElement_Yield
-  : '...' BindingIdentifier_Yield
+bindingRestElement_Yield
+  : '...' bindingIdentifier_Yield
   ;
 
 EmptyStatement
@@ -1997,35 +1997,35 @@ EmptyStatement
 
 //  ExpressionStatement[Yield] :
 //   [lookahead ∉ { {, function, class, let [ }] Expression[In, ?Yield] ;
-ExpressionStatement
-  : {(_input.LA(1) != '{') && (_input.LA(1) != 'function') && (_input.LA(1) != 'class') && (_input.LA(1) != 'let') && (_input.LA(1) != '[')}? Expression ';'
+expressionStatement
+  : {(_input.LA(1) != '{') && (_input.LA(1) != 'function') && (_input.LA(1) != 'class') && (_input.LA(1) != 'let') && (_input.LA(1) != '[')}? expression ';'
   ;
 
-ExpressionStatement_Yield
-  : {(_input.LA(1) != '{') && (_input.LA(1) != 'function') && (_input.LA(1) != 'class') && (_input.LA(1) != 'let') && (_input.LA(1) != '[')}? Expression_In_Yield ';'
+expressionStatement_Yield
+  : {(_input.LA(1) != '{') && (_input.LA(1) != 'function') && (_input.LA(1) != 'class') && (_input.LA(1) != 'let') && (_input.LA(1) != '[')}? expression_In_Yield ';'
   ;
 
 //  IfStatement[Yield, Return] :
 //   if ( Expression[In, ?Yield] ) Statement[?Yield, ?Return] else Statement[?Yield, ?Return]
 //   if ( Expression[In, ?Yield] ) Statement[?Yield, ?Return]
-IfStatement
-  : 'if' ( Expression_In ) Statement 'else' Statement
-  | 'if' ( Expression_In ) Statement
+ifStatement
+  : 'if' ( expression_In ) statement 'else' statement
+  | 'if' ( expression_In ) statement
   ;
 
-IfStatement_Yield
-  : 'if' ( Expression_In_Yield ) Statement_Yield 'else' Statement_Yield
-  | 'if' ( Expression_In_Yield ) Statement_Yield
+ifStatement_Yield
+  : 'if' ( expression_In_Yield ) statement_Yield 'else' statement_Yield
+  | 'if' ( expression_In_Yield ) statement_Yield
   ;
 
-IfStatement_Return
-  : 'if' ( Expression_In ) Statement_Return 'else' Statement_Return
-  | 'if' ( Expression_In ) Statement_Return
+ifStatement_Return
+  : 'if' ( expression_In ) statement_Return 'else' statement_Return
+  | 'if' ( expression_In ) statement_Return
   ;
 
-IfStatement_Yield_Return
-  : 'if' ( Expression_In_Yield ) Statement_Yield_Return 'else' Statement_Yield_Return
-  | 'if' ( Expression_In_Yield ) Statement_Yield_Return
+ifStatement_Yield_Return
+  : 'if' ( expression_In_Yield ) statement_Yield_Return 'else' statement_Yield_Return
+  | 'if' ( expression_In_Yield ) statement_Yield_Return
   ;
 
 //  IterationStatement[Yield, Return] :
@@ -2040,368 +2040,368 @@ IfStatement_Yield_Return
 //   for ( [lookahead ≠ let] LeftHandSideExpression[?Yield] of AssignmentExpression[In, ?Yield] ) Statement[?Yield, ?Return]
 //   for ( var ForBinding[?Yield] of AssignmentExpression[In, ?Yield] ) Statement[?Yield, ?Return]
 //   for ( ForDeclaration[?Yield] of AssignmentExpression[In, ?Yield] ) Statement[?Yield, ?Return]
-IterationStatement
-  : 'do' Statement 'while' '(' Expression ')' ';'
-  | 'while' '(' Expression ')' Statement
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? Expression? ';' Expression? ';' Expression? ')' Statement
-  | 'for' '(' 'var' VariableDeclarationList ';' Expression? ';' Expression? ')' Statement
-  | 'for' '(' LexicalDeclaration Expression? ';' Expression? ')' Statement
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? LeftHandSideExpression 'in' Expression ')' Statement
-  | 'for' '(' 'var' ForBinding 'in' Expression ')' Statement
-  | 'for' '(' ForDeclaration 'in' Expression ')' Statement
-  | 'for' '(' {(_input.LA(1) != 'let')}? LeftHandSideExpression 'of' AssignmentExpression ')' Statement
-  | 'for' '(' 'var' ForBinding 'of' AssignmentExpression ')' Statement
-  | 'for' '(' ForDeclaration 'of' AssignmentExpression ')' Statement
+iterationStatement
+  : 'do' statement 'while' '(' expression ')' ';'
+  | 'while' '(' expression ')' statement
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? expression? ';' expression? ';' expression? ')' statement
+  | 'for' '(' 'var' variableDeclarationList ';' expression? ';' expression? ')' statement
+  | 'for' '(' lexicalDeclaration expression? ';' expression? ')' statement
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? leftHandSideExpression 'in' expression ')' statement
+  | 'for' '(' 'var' forBinding 'in' expression ')' statement
+  | 'for' '(' forDeclaration 'in' expression ')' statement
+  | 'for' '(' {(_input.LA(1) != 'let')}? leftHandSideExpression 'of' assignmentExpression ')' statement
+  | 'for' '(' 'var' forBinding 'of' assignmentExpression ')' statement
+  | 'for' '(' forDeclaration 'of' assignmentExpression ')' statement
   ;
 
-IterationStatement_Yield
-  : 'do' Statement_Yield 'while' '(' Expression_Yield ')' ';'
-  | 'while' '(' Expression_Yield ')' Statement_Yield
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? Expression_Yield? ';' Expression_Yield? ';' Expression_Yield? ')' Statement_Yield
-  | 'for' '(' 'var' VariableDeclarationList_Yield ';' Expression_Yield? ';' Expression_Yield? ')' Statement_Yield
-  | 'for' '(' LexicalDeclaration_Yield Expression_Yield? ';' Expression_Yield? ')' Statement_Yield
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? LeftHandSideExpression_Yield 'in' Expression_Yield ')' Statement_Yield
-  | 'for' '(' 'var' ForBinding_Yield 'in' Expression_Yield ')' Statement_Yield
-  | 'for' '(' ForDeclaration_Yield 'in' Expression_Yield ')' Statement_Yield
-  | 'for' '(' {(_input.LA(1) != 'let'))}? LeftHandSideExpression_Yield 'of' AssignmentExpression_Yield ')' Statement_Yield
-  | 'for' '(' 'var' ForBinding_Yield 'of' AssignmentExpression_Yield ')' Statement_Yield
-  | 'for' '(' ForDeclaration_Yield 'of' AssignmentExpression_Yield ')' Statement_Yield
+iterationStatement_Yield
+  : 'do' statement_Yield 'while' '(' expression_Yield ')' ';'
+  | 'while' '(' expression_Yield ')' statement_Yield
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? expression_Yield? ';' expression_Yield? ';' expression_Yield? ')' statement_Yield
+  | 'for' '(' 'var' variableDeclarationList_Yield ';' expression_Yield? ';' expression_Yield? ')' statement_Yield
+  | 'for' '(' lexicalDeclaration_Yield expression_Yield? ';' expression_Yield? ')' statement_Yield
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? leftHandSideExpression_Yield 'in' expression_Yield ')' statement_Yield
+  | 'for' '(' 'var' forBinding_Yield 'in' expression_Yield ')' statement_Yield
+  | 'for' '(' forDeclaration_Yield 'in' expression_Yield ')' statement_Yield
+  | 'for' '(' {(_input.LA(1) != 'let'))}? leftHandSideExpression_Yield 'of' assignmentExpression_Yield ')' statement_Yield
+  | 'for' '(' 'var' forBinding_Yield 'of' assignmentExpression_Yield ')' statement_Yield
+  | 'for' '(' forDeclaration_Yield 'of' assignmentExpression_Yield ')' statement_Yield
   ;
 
-IterationStatement_Return
-  : 'do' Statement_Return 'while' '(' Expression_In ')' ';'
-  | 'while' '(' Expression_In ')' Statement_Return
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? Expression? ';' Expression_In? ';' Expression_In? ')' Statement_Return
-  | 'for' '(' 'var' VariableDeclarationList ';' Expression_In? ';' Expression_In? ')' Statement_Return
-  | 'for' '(' LexicalDeclaration Expression_In? ';' Expression_In? ')' Statement_Return
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? LeftHandSideExpression 'in' Expression_In ')' Statement_Return
-  | 'for' '(' 'var' ForBinding 'in' Expression_In ')' Statement_Return
-  | 'for' '(' ForDeclaration 'in' Expression_In ')' Statement_Return
-  | 'for' '(' {(_input.LA(1) != 'let'))}? LeftHandSideExpression 'of' AssignmentExpression_In ')' Statement_Return
-  | 'for' '(' 'var' ForBinding 'of' AssignmentExpression_In ')' Statement_Return
-  | 'for' '(' ForDeclaration 'of' AssignmentExpression_In ')' Statement_Return
+iterationStatement_Return
+  : 'do' statement_Return 'while' '(' expression_In ')' ';'
+  | 'while' '(' expression_In ')' statement_Return
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? expression? ';' expression_In? ';' expression_In? ')' statement_Return
+  | 'for' '(' 'var' variableDeclarationList ';' expression_In? ';' expression_In? ')' statement_Return
+  | 'for' '(' lexicalDeclaration expression_In? ';' expression_In? ')' statement_Return
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? leftHandSideExpression 'in' expression_In ')' statement_Return
+  | 'for' '(' 'var' forBinding 'in' expression_In ')' statement_Return
+  | 'for' '(' forDeclaration 'in' expression_In ')' statement_Return
+  | 'for' '(' {(_input.LA(1) != 'let'))}? leftHandSideExpression 'of' assignmentExpression_In ')' statement_Return
+  | 'for' '(' 'var' forBinding 'of' assignmentExpression_In ')' statement_Return
+  | 'for' '(' forDeclaration 'of' assignmentExpression_In ')' statement_Return
   ;
 
-IterationStatement_Yield_Return
-  : 'do' Statement_Yield_Return 'while' '(' Expression_In_Yield ')' ';'
-  | 'while' '(' Expression_In_Yield ')' Statement_Yield_Return
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? Expression_Yield? ';' Expression_In_Yield? ';' Expression_In_Yield? ')' Statement_Yield_Return
-  | 'for' '(' 'var' VariableDeclarationList_Yield ';' Expression_In_Yield? ';' Expression_In_Yield? ')' Statement_Yield_Return
-  | 'for' '(' LexicalDeclaration_Yield Expression_In_Yield? ';' Expression_In_Yield? ')' Statement_Yield_Return
-  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? LeftHandSideExpression_Yield 'in' Expression_In_Yield ')' Statement_Yield_Return
-  | 'for' '(' 'var' ForBinding_Yield 'in' Expression_In_Yield ')' Statement_Yield_Return
-  | 'for' '(' ForDeclaration_Yield 'in' Expression_In_Yield ')' Statement_Yield_Return
-  | 'for' '(' {(_input.LA(1) != 'let'))}? LeftHandSideExpression_Yield 'of' AssignmentExpression_In_Yield ')' Statement_Yield_Return
-  | 'for' '(' 'var' ForBinding_Yield 'of' AssignmentExpression_In_Yield ')' Statement_Yield_Return
-  | 'for' '(' ForDeclaration_Yield 'of' AssignmentExpression_In_Yield ')' Statement_Yield_Return
+iterationStatement_Yield_Return
+  : 'do' statement_Yield_Return 'while' '(' expression_In_Yield ')' ';'
+  | 'while' '(' expression_In_Yield ')' statement_Yield_Return
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? expression_Yield? ';' expression_In_Yield? ';' expression_In_Yield? ')' statement_Yield_Return
+  | 'for' '(' 'var' variableDeclarationList_Yield ';' expression_In_Yield? ';' expression_In_Yield? ')' statement_Yield_Return
+  | 'for' '(' lexicalDeclaration_Yield expression_In_Yield? ';' expression_In_Yield? ')' statement_Yield_Return
+  | 'for' '(' {(_input.LA(1) != 'let') && (_input.LA(1) != '[')}? leftHandSideExpression_Yield 'in' expression_In_Yield ')' statement_Yield_Return
+  | 'for' '(' 'var' forBinding_Yield 'in' expression_In_Yield ')' statement_Yield_Return
+  | 'for' '(' forDeclaration_Yield 'in' expression_In_Yield ')' statement_Yield_Return
+  | 'for' '(' {(_input.LA(1) != 'let'))}? leftHandSideExpression_Yield 'of' assignmentExpression_In_Yield ')' statement_Yield_Return
+  | 'for' '(' 'var' forBinding_Yield 'of' assignmentExpression_In_Yield ')' statement_Yield_Return
+  | 'for' '(' forDeclaration_Yield 'of' assignmentExpression_In_Yield ')' statement_Yield_Return
   ;
 
 //  ForDeclaration[Yield] :
 //   LetOrConst ForBinding[?Yield]
-ForDeclaration
-  : LetOrConst ForBinding
+forDeclaration
+  : LetOrConst forBinding
   ;
 
-ForDeclaration_Yield
-  : LetOrConst ForBinding_Yield
+forDeclaration_Yield
+  : LetOrConst forBinding_Yield
   ;
 
 //  ForBinding[Yield] :
 //   BindingIdentifier[?Yield]
 //   BindingPattern[?Yield]
-ForBinding
-  : BindingIdentifier
-  | BindingPattern
+forBinding
+  : bindingIdentifier
+  | bindingPattern
   ;
 
-ForBinding_Yield
-  : BindingIdentifier_Yield
-  | BindingPattern_Yield
+forBinding_Yield
+  : bindingIdentifier_Yield
+  | bindingPattern_Yield
   ;
 
 //  ContinueStatement[Yield] :
 //   continue ;
 //   continue [no LineTerminator here] LabelIdentifier[?Yield] ;
-ContinueStatement
+continueStatement
   : 'continue' ';'
-  | 'continue' ~LineTerminator LabelIdentifier ';'
+  | 'continue' ~LineTerminator labelIdentifier ';'
   ;
 
-ContinueStatement_Yield
+continueStatement_Yield
   : 'continue' ';'
-  | 'continue' ~LineTerminator LabelIdentifier_Yield ';'
+  | 'continue' ~LineTerminator labelIdentifier_Yield ';'
   ;
 
 //  BreakStatement[Yield] :
 //   break ;
 //   break [no LineTerminator here] LabelIdentifier[?Yield] ;
-BreakStatement
+breakStatement
   : 'break' ';'
-  | 'break' ~LineTerminator LabelIdentifier ';'
+  | 'break' ~LineTerminator labelIdentifier ';'
   ;
 
-BreakStatement_Yield
+breakStatement_Yield
   : 'break' ';'
-  | 'break' ~LineTerminator LabelIdentifier_Yield ';'
+  | 'break' ~LineTerminator labelIdentifier_Yield ';'
   ;
 
 //  ReturnStatement[Yield] :
 //   return ;
 //   return [no LineTerminator here] Expression[In, ?Yield] ;
-ReturnStatement
+returnStatement
   : 'return' ';'
-  | 'return' ~LineTerminator Expression_In ';'
+  | 'return' ~LineTerminator expression_In ';'
   ;
 
-ReturnStatement_Yield
+returnStatement_Yield
   : 'return' ';'
-  | 'return' ~LineTerminator Expression_In_Yield ';'
+  | 'return' ~LineTerminator expression_In_Yield ';'
   ;
 
 //  WithStatement[Yield, Return] :
 //   with ( Expression[In, ?Yield] ) Statement[?Yield, ?Return]
-WithStatement
-  : 'with' '(' Expression_Yield ')' Statement
+withStatement
+  : 'with' '(' expression_Yield ')' statement
   ;
 
-WithStatement_Yield
-  : 'with' '(' Expression_In_Yield ')' Statement_Yield
+withStatement_Yield
+  : 'with' '(' expression_In_Yield ')' statement_Yield
   ;
 
-WithStatement_Return
-  : 'with' '(' Expression_In ')' Statement_Return
+withStatement_Return
+  : 'with' '(' expression_In ')' statement_Return
   ;
 
-WithStatement_Yield_Return
-  : 'with' '(' Expression_In_Yield ')' Statement_Yield_Return
+withStatement_Yield_Return
+  : 'with' '(' expression_In_Yield ')' statement_Yield_Return
   ;
 
 //  SwitchStatement[Yield, Return] :
 //   switch ( Expression[In, ?Yield] ) CaseBlock[?Yield, ?Return]
-SwitchStatement
-  : 'switch' '(' Expression_In ')' CaseBlock
+switchStatement
+  : 'switch' '(' expression_In ')' caseBlock
   ;
 
-SwitchStatement_Yield
-  : 'switch' '(' Expression_In_Yield ')' CaseBlock_Yield
+switchStatement_Yield
+  : 'switch' '(' expression_In_Yield ')' caseBlock_Yield
   ;
 
-SwitchStatement_Return
-  : 'switch' '(' Expression_In ')' CaseBlock_Return
+switchStatement_Return
+  : 'switch' '(' expression_In ')' caseBlock_Return
   ;
 
-SwitchStatement_Yield_Return
-  : 'switch' '(' Expression_In_Yield ')' CaseBlock_Yield_Return
+switchStatement_Yield_Return
+  : 'switch' '(' expression_In_Yield ')' caseBlock_Yield_Return
   ;
 
 //  CaseBlock[Yield, Return] :
 //   { CaseClauses[?Yield, ?Return]opt }
 //   { CaseClauses[?Yield, ?Return]opt DefaultClause[?Yield, ?Return] CaseClauses[?Yield, ?Return]opt }
-CaseBlock
-  : '{' CaseClauses? '}'
-  | '{' CaseClauses? DefaultClause CaseClauses? '}'
+caseBlock
+  : '{' caseClauses? '}'
+  | '{' caseClauses? defaultClause caseClauses? '}'
   ;
 
-CaseBlock_Yield
-  : '{' CaseClauses_Yield? '}'
-  | '{' CaseClauses_Yield? DefaultClause_Yield CaseClauses_Yield? '}'
+caseBlock_Yield
+  : '{' caseClauses_Yield? '}'
+  | '{' caseClauses_Yield? defaultClause_Yield caseClauses_Yield? '}'
   ;
 
-CaseBlock_Return
-  : '{' CaseClauses_Return? '}'
-  | '{' CaseClauses_Return? DefaultClause_Return CaseClauses_Return? '}'
+caseBlock_Return
+  : '{' caseClauses_Return? '}'
+  | '{' caseClauses_Return? defaultClause_Return caseClauses_Return? '}'
   ;
 
-CaseBlock_Yield_Return
-  : '{' CaseClauses_Yield_Return? '}'
-  | '{' CaseClauses_Yield_Return? DefaultClause_Yield_Return CaseClauses_Yield_Return? '}'
+caseBlock_Yield_Return
+  : '{' caseClauses_Yield_Return? '}'
+  | '{' caseClauses_Yield_Return? defaultClause_Yield_Return caseClauses_Yield_Return? '}'
   ;
 
 //  CaseClauses[Yield, Return] :
 //   CaseClause[?Yield, ?Return]
 //   CaseClauses[?Yield, ?Return] CaseClause[?Yield, ?Return]
-CaseClauses
-  : CaseClause
-  | CaseClauses CaseClause
+caseClauses
+  : caseClause
+  | caseClauses caseClause
   ;
 
-CaseClauses_Yield
-  : CaseClause_Yield
-  | CaseClauses_Yield CaseClause_Yield
+caseClauses_Yield
+  : caseClause_Yield
+  | caseClauses_Yield caseClause_Yield
   ;
 
-CaseClauses_Return
-  : CaseClause_Return
-  | CaseClauses_Return CaseClause_Return
+caseClauses_Return
+  : caseClause_Return
+  | caseClauses_Return caseClause_Return
   ;
 
-CaseClauses_Yield_Return
-  : CaseClause_Yield_Return
-  | CaseClauses_Yield_Return CaseClause_Yield_Return
+caseClauses_Yield_Return
+  : caseClause_Yield_Return
+  | caseClauses_Yield_Return caseClause_Yield_Return
   ;
 
 //  CaseClause[Yield, Return] :
 //   case Expression[In, ?Yield] : StatementList[?Yield, ?Return]opt
-CaseClause
-  : 'case' Expression_In ':' StatementList?
+caseClause
+  : 'case' expression_In ':' statementList?
   ;
 
-CaseClause_Yield
-  : 'case' Expression_In_Yield ':' StatementList_Yield?
+caseClause_Yield
+  : 'case' expression_In_Yield ':' statementList_Yield?
   ;
 
-CaseClause_Return
-  : 'case' Expression_In ':' StatementList_Return?
+caseClause_Return
+  : 'case' expression_In ':' statementList_Return?
   ;
 
-CaseClause_Yield_Return
-  : 'case' Expression_In_Yield ':' StatementList_Yield_Return?
+caseClause_Yield_Return
+  : 'case' expression_In_Yield ':' statementList_Yield_Return?
   ;
 
 //  DefaultClause[Yield, Return] :
 //   default : StatementList[?Yield, ?Return]opt
-DefaultClause
-  : 'default' ':' StatementList?
+defaultClause
+  : 'default' ':' statementList?
   ;
 
-DefaultClause_Yield
-  : 'default' ':' StatementList_Yield?
+defaultClause_Yield
+  : 'default' ':' statementList_Yield?
   ;
 
-DefaultClause_Return
-  : 'default' ':' StatementList_Return?
+defaultClause_Return
+  : 'default' ':' statementList_Return?
   ;
 
-DefaultClause_Yield_Return
-  : 'default' ':' StatementList_Yield_Return?
+defaultClause_Yield_Return
+  : 'default' ':' statementList_Yield_Return?
   ;
 
 //  LabelledStatement[Yield, Return] :
 //   LabelIdentifier[?Yield] : LabelledItem[?Yield, ?Return]
-LabelledStatement
-  : LabelIdentifier ':' LabelledItem
+labelledStatement
+  : labelIdentifier ':' labelledItem
   ;
 
-LabelledStatement_Yield
-  : LabelIdentifier_Yield ':' LabelledItem_Yield
+labelledStatement_Yield
+  : labelIdentifier_Yield ':' labelledItem_Yield
   ;
 
-LabelledStatement_Return
-  : LabelIdentifier ':' LabelledItem_Return
+labelledStatement_Return
+  : labelIdentifier ':' labelledItem_Return
   ;
 
-LabelledStatement_Yield_Return
-  : LabelIdentifier_Yield ':' LabelledItem_Yield_Return
+labelledStatement_Yield_Return
+  : labelIdentifier_Yield ':' labelledItem_Yield_Return
   ;
 
 //  LabelledItem[Yield, Return] :
 //   Statement[?Yield, ?Return]
 //   FunctionDeclaration[?Yield]
-LabelledItem
-  : Statement
-  | FunctionDeclaration
+labelledItem
+  : statement
+  | functionDeclaration
   ;
 
-LabelledItem_Yield
-  : Statement_Yield
-  | FunctionDeclaration_Yield
+labelledItem_Yield
+  : statement_Yield
+  | functionDeclaration_Yield
   ;
 
-LabelledItem_Return
-  : Statement_Return
-  | FunctionDeclaration
+labelledItem_Return
+  : statement_Return
+  | functionDeclaration
   ;
 
-LabelledItem_Yield_Return
-  : Statement_Yield_Return
-  | FunctionDeclaration_Yield
+labelledItem_Yield_Return
+  : statement_Yield_Return
+  | functionDeclaration_Yield
   ;
 
 //  ThrowStatement[Yield] :
 //   throw [no LineTerminator here] Expression[In, ?Yield] ;
-ThrowStatement
-  : 'throw' ~LineTerminator Expression_In ';'
+throwStatement
+  : 'throw' ~LineTerminator expression_In ';'
   ;
 
-ThrowStatement_Yield
-  : 'throw' ~LineTerminator Expression_In_Yield ';'
+throwStatement_Yield
+  : 'throw' ~LineTerminator expression_In_Yield ';'
   ;
 
 //  TryStatement[Yield, Return] :
 //   try Block[?Yield, ?Return] Catch[?Yield, ?Return]
 //   try Block[?Yield, ?Return] Finally[?Yield, ?Return]
 //   try Block[?Yield, ?Return] Catch[?Yield, ?Return] Finally[?Yield, ?Return]
-TryStatement
-  : 'try' Block Catch
-  | 'try' Block Finally
-  | 'try' Block Catch Finally
+tryStatement
+  : 'try' block catchStatement
+  | 'try' block finallyStatement
+  | 'try' block catchStatement finallyStatement
   ;
 
-TryStatement_Yield
-  : 'try' Block_Yield Catch_Yield
-  | 'try' Block_Yield Finally_Yield
-  | 'try' Block_Yield Catch_Yield Finally_Yield
+tryStatement_Yield
+  : 'try' block_Yield catch_Yield
+  | 'try' block_Yield finally_Yield
+  | 'try' block_Yield catch_Yield finally_Yield
   ;
 
-TryStatement_Return
-  : 'try' Block_Return Catch_Return
-  | 'try' Block_Return Finally_Return
-  | 'try' Block_Return Catch_Return Finally_Return
+tryStatement_Return
+  : 'try' block_Return catch_Return
+  | 'try' block_Return finally_Return
+  | 'try' block_Return catch_Return finally_Return
   ;
 
-TryStatement_Yield_Return
-  : 'try' Block_Yield_Return Catch_Yield_Return
-  | 'try' Block_Yield_Return Finally_Yield_Return
-  | 'try' Block_Yield_Return Catch_Yield_Return Finally_Yield_Return
+tryStatement_Yield_Return
+  : 'try' block_Yield_Return catch_Yield_Return
+  | 'try' block_Yield_Return finally_Yield_Return
+  | 'try' block_Yield_Return catch_Yield_Return finally_Yield_Return
   ;
 
 //  Catch[Yield, Return] :
 //   catch ( CatchParameter[?Yield] ) Block[?Yield, ?Return]
-Catch
-  : 'catch' '(' CatchParameter ')' Block
+catchStatement
+  : 'catch' '(' catchParameter ')' block
   ;
 
-Catch_Yield
-  : 'catch' '(' CatchParameter_Yield ')' Block_Yield
+catch_Yield
+  : 'catch' '(' catchParameter_Yield ')' block_Yield
   ;
 
-Catch_Return
-  : 'catch' '(' CatchParameter ')' Block_Return
+catch_Return
+  : 'catch' '(' catchParameter ')' block_Return
   ;
 
-Catch_Yield_Return
-  : 'catch' '(' CatchParameter_Yield ')' Block_Yield_Return
+catch_Yield_Return
+  : 'catch' '(' catchParameter_Yield ')' block_Yield_Return
   ;
 
 //  Finally[Yield, Return] :
 //   finally Block[?Yield, ?Return]
-Finally
-  : 'finally' Block
+finallyStatement
+  : 'finally' block
   ;
 
-Finally_Yield
-  : 'finally' Block_Yield
+finally_Yield
+  : 'finally' block_Yield
   ;
 
-Finally_Return
-  : 'finally' Block_Return
+finally_Return
+  : 'finally' block_Return
   ;
 
-Finally_Yield_Return
-  : 'finally' Block_Yield_Return
+finally_Yield_Return
+  : 'finally' block_Yield_Return
   ;
 
 //  CatchParameter[Yield] :
 //   BindingIdentifier[?Yield]
 //   BindingPattern[?Yield]
-CatchParameter
-  : BindingIdentifier
-  | BindingPattern
+catchParameter
+  : bindingIdentifier
+  | bindingPattern
   ;
 
-CatchParameter_Yield
-  : BindingIdentifier_Yield
-  | BindingPattern_Yield
+catchParameter_Yield
+  : bindingIdentifier_Yield
+  | bindingPattern_Yield
   ;
 
 //  DebuggerStatement :
@@ -2413,166 +2413,166 @@ DebuggerStatement
 //  FunctionDeclaration[Yield, Default] :
 //   function BindingIdentifier[?Yield] ( FormalParameters ) { FunctionBody }
 //   [+Default] function ( FormalParameters ) { FunctionBody }
-FunctionDeclaration
-  : 'function' BindingIdentifier '(' FormalParameters ')' '{' FunctionBody '}'
-  | 'function' '(' FormalParameters ')' '{' FunctionBody '}'
+functionDeclaration
+  : 'function' bindingIdentifier '(' formalParameters ')' '{' functionBody '}'
+  | 'function' '(' formalParameters ')' '{' functionBody '}'
   ;
 
-FunctionDeclaration_Yield
-  : 'function' BindingIdentifier_Yield '(' FormalParameters ')' '{' FunctionBody '}'
-  | 'function' '(' FormalParameters ')' '{' FunctionBody '}'
+functionDeclaration_Yield
+  : 'function' bindingIdentifier_Yield '(' formalParameters ')' '{' functionBody '}'
+  | 'function' '(' formalParameters ')' '{' functionBody '}'
   ;
 
-FunctionDeclaration_Default
-  : 'function' BindingIdentifier '(' FormalParameters ')' '{' FunctionBody '}'
-  | 'function' '(' FormalParameters ')' '{' FunctionBody '}'
+functionDeclaration_Default
+  : 'function' bindingIdentifier '(' formalParameters ')' '{' functionBody '}'
+  | 'function' '(' formalParameters ')' '{' functionBody '}'
   ;
 
-FunctionDeclaration_Yield_Default
-  : 'function' BindingIdentifier_Yield '(' FormalParameters ')' '{' FunctionBody '}'
-  | 'function' '(' FormalParameters ')' '{' FunctionBody '}'
+functionDeclaration_Yield_Default
+  : 'function' bindingIdentifier_Yield '(' formalParameters ')' '{' functionBody '}'
+  | 'function' '(' formalParameters ')' '{' functionBody '}'
   ;
 
 //  FunctionExpression :
 //   function BindingIdentifieropt ( FormalParameters ) { FunctionBody }
-FunctionExpression
-  : 'function' BindingIdentifier? '(' FormalParameters ')' '{' FunctionBody '}'
+functionExpression
+  : 'function' bindingIdentifier? '(' formalParameters ')' '{' functionBody '}'
   ;
 
 //  StrictFormalParameters[Yield] :
 //   FormalParameters[?Yield]
-StrictFormalParameters
-  : FormalParameters
+strictFormalParameters
+  : formalParameters
   ;
 
-StrictFormalParameters_Yield
-  : FormalParameters_Yield
+strictFormalParameters_Yield
+  : formalParameters_Yield
   ;
 
 //  FormalParameters[Yield] :
 //   [empty]
 //   FormalParameterList[?Yield]
-FormalParameters
+formalParameters
   : //[empty]
-  | FormalParameterList
+  | formalParameterList
   ;
 
-FormalParameters_Yield
+formalParameters_Yield
   : //[empty]
-  | FormalParameterList_Yield
+  | formalParameterList_Yield
   ;
 
 //  FormalParameterList[Yield] :
 //   FunctionRestParameter[?Yield]
 //   FormalsList[?Yield]
 //   FormalsList[?Yield] , FunctionRestParameter[?Yield]
-FormalParameterList
-  : FunctionRestParameter
-  | FormalsList
-  | FormalsList ',' FunctionRestParameter
+formalParameterList
+  : functionRestParameter
+  | formalsList
+  | formalsList ',' functionRestParameter
   ;
 
-FormalParameterList_Yield
-  : FunctionRestParameter_Yield
-  | FormalsList_Yield
-  | FormalsList_Yield ',' FunctionRestParameter_Yield
+formalParameterList_Yield
+  : functionRestParameter_Yield
+  | formalsList_Yield
+  | formalsList_Yield ',' functionRestParameter_Yield
   ;
 
 //  FormalsList[Yield] :
 //   FormalParameter[?Yield]
 //   FormalsList[?Yield] , FormalParameter[?Yield]
-FormalsList
-  : FormalParameter
-  | FormalsList ',' FormalParameter
+formalsList
+  : formalParameter
+  | formalsList ',' formalParameter
   ;
 
-FormalsList_Yield
-  : FormalParameter_Yield
-  | FormalsList_Yield ',' FormalParameter_Yield
+formalsList_Yield
+  : formalParameter_Yield
+  | formalsList_Yield ',' formalParameter_Yield
   ;
 
 //  FunctionRestParameter[Yield] :
 //   BindingRestElement[?Yield]
-FunctionRestParameter
-  : BindingRestElement
+functionRestParameter
+  : bindingRestElement
   ;
 
-FunctionRestParameter_Yield
-  : BindingRestElement_Yield
+functionRestParameter_Yield
+  : bindingRestElement_Yield
   ;
 
 //  FormalParameter[Yield] :
 //   BindingElement[?Yield]
-FormalParameter
-  : BindingElement
+formalParameter
+  : bindingElement
   ;
 
-FormalParameter_Yield
-  : BindingElement_Yield
+formalParameter_Yield
+  : bindingElement_Yield
   ;
 
 //  FunctionBody[Yield] :
 //   FunctionStatementList[?Yield]
-FunctionBody
-  : FunctionStatementList
+functionBody
+  : functionStatementList
   ;
 
-FunctionBody_Yield
-  : FunctionStatementList_Yield
+functionBody_Yield
+  : functionStatementList_Yield
   ;
 
 //  FunctionStatementList[Yield] :
 //   StatementList[?Yield, Return]opt
-FunctionStatementList
-  : StatementList_Yield?
+functionStatementList
+  : statementList_Yield?
   ;
 
-FunctionStatementList_Yield
-  : StatementList_Yield_Return?
+functionStatementList_Yield
+  : statementList_Yield_Return?
   ;
 
 //  ArrowFunction[In, Yield] :
 //   ArrowParameters[?Yield] [no LineTerminator here] => ConciseBody[?In]
-ArrowFunction
-  : ArrowParameters ~LineTerminator '=>' ConciseBody
+arrowFunction
+  : arrowParameters ~LineTerminator '=>' conciseBody
   ;
 
-ArrowFunction_In
-  : ArrowParameters ~LineTerminator '=>' ConciseBody_In
+arrowFunction_In
+  : arrowParameters ~LineTerminator '=>' conciseBody_In
   ;
 
-ArrowFunction_Yield
-  : ArrowParameters_Yield ~LineTerminator '=>' ConciseBody
+arrowFunction_Yield
+  : arrowParameters_Yield ~LineTerminator '=>' conciseBody
   ;
 
-ArrowFunction_In_Yield
-  : ArrowParameters_Yield ~LineTerminator '=>' ConciseBody_In
+arrowFunction_In_Yield
+  : arrowParameters_Yield ~LineTerminator '=>' conciseBody_In
   ;
 
 //  ArrowParameters[Yield] :
 //   BindingIdentifier[?Yield]
 //   CoverParenthesizedExpressionAndArrowParameterList[?Yield]
-ArrowParameters
-     : BindingIdentifier
-     | CoverParenthesizedExpressionAndArrowParameterList
+arrowParameters
+     : bindingIdentifier
+     | coverParenthesizedExpressionAndArrowParameterList
      ;
 
-ArrowParameters_Yield
-  : BindingIdentifier_Yield
-  | CoverParenthesizedExpressionAndArrowParameterList_Yield
+arrowParameters_Yield
+  : bindingIdentifier_Yield
+  | coverParenthesizedExpressionAndArrowParameterList_Yield
   ;
 
 //  ConciseBody[In] :
 //   [lookahead ≠ {] AssignmentExpression[?In]
 //   { FunctionBody }
-ConciseBody
-  : {(_input.LA(1) != '{')}? AssignmentExpression
-  | '{' FunctionBody '}'
+conciseBody
+  : {(_input.LA(1) != '{')}? assignmentExpression
+  | '{' functionBody '}'
   ;
 
-ConciseBody_In
-  : {(_input.LA(1) != '{'))}? AssignmentExpression_In
-  | '{' FunctionBody '}'
+conciseBody_In
+  : {(_input.LA(1) != '{'))}? assignmentExpression_In
+  | '{' functionBody '}'
   ;
 
 //  MethodDefinition[Yield] :
@@ -2580,217 +2580,217 @@ ConciseBody_In
 //   GeneratorMethod[?Yield]
 //   get PropertyName[?Yield] ( ) { FunctionBody }
 //   set PropertyName[?Yield] ( PropertySetParameterList ) { FunctionBody }
-MethodDefinition
-  : PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
-  | GeneratorMethod
-  | 'get 'PropertyName '(' ')' '{' FunctionBody '}'
-  | 'set' PropertyName '(' PropertySetParameterList ')' '{' FunctionBody '}'
+methodDefinition
+  : propertyName '(' strictFormalParameters ')' '{' functionBody '}'
+  | generatorMethod
+  | 'get 'propertyName '(' ')' '{' functionBody '}'
+  | 'set' propertyName '(' propertySetParameterList ')' '{' functionBody '}'
   ;
 
-MethodDefinition_Yield
-  : PropertyName_Yield '(' StrictFormalParameters ')' '{' FunctionBody '}'
-  | GeneratorMethod_Yield
-  | 'get 'PropertyName_Yield '(' ')' '{' FunctionBody '}'
-  | 'set' PropertyName_Yield '(' PropertySetParameterList ')' '{' FunctionBody '}'
+methodDefinition_Yield
+  : propertyName_Yield '(' strictFormalParameters ')' '{' functionBody '}'
+  | generatorMethod_Yield
+  | 'get 'propertyName_Yield '(' ')' '{' functionBody '}'
+  | 'set' propertyName_Yield '(' propertySetParameterList ')' '{' functionBody '}'
   ;
 
 //  PropertySetParameterList :
 //   FormalParameter
-PropertySetParameterList
-  : FormalParameter
+propertySetParameterList
+  : formalParameter
   ;
 
 //  GeneratorMethod[Yield] :
 //   * PropertyName[?Yield] ( StrictFormalParameters[Yield] ) { GeneratorBody }
-GeneratorMethod
-  : '*' PropertyName ( StrictFormalParameters ) '{' GeneratorBody '}'
+generatorMethod
+  : '*' propertyName ( strictFormalParameters ) '{' generatorBody '}'
   ;
 
-GeneratorMethod_Yield
-  : '*' PropertyName_Yield ( StrictFormalParameters_Yield ) '{' GeneratorBody '}'
+generatorMethod_Yield
+  : '*' propertyName_Yield ( strictFormalParameters_Yield ) '{' generatorBody '}'
   ;
 
 //  GeneratorDeclaration[Yield, Default] :
 //   function * BindingIdentifier[?Yield] ( FormalParameters[Yield] ) { GeneratorBody }
 //   [+Default] function * ( FormalParameters[Yield] ) { GeneratorBody }
-GeneratorDeclaration
-  : 'function' '*' BindingIdentifier '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
+generatorDeclaration
+  : 'function' '*' bindingIdentifier '(' formalParameters_Yield ')' '{' generatorBody '}'
   ;
 
-GeneratorDeclaration_Yield
-  : 'function' '*' BindingIdentifier_Yield '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
+generatorDeclaration_Yield
+  : 'function' '*' bindingIdentifier_Yield '(' formalParameters_Yield ')' '{' generatorBody '}'
   ;
 
-GeneratorDeclaration_Default
-  : 'function' '*' BindingIdentifier_Yield '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
-  | 'function' '*' '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
+generatorDeclaration_Default
+  : 'function' '*' bindingIdentifier_Yield '(' formalParameters_Yield ')' '{' generatorBody '}'
+  | 'function' '*' '(' formalParameters_Yield ')' '{' generatorBody '}'
   ;
 
-GeneratorDeclaration_Yield_Default
-  : 'function' '*' BindingIdentifier_Yield '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
-  | 'function' '*' '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
+generatorDeclaration_Yield_Default
+  : 'function' '*' bindingIdentifier_Yield '(' formalParameters_Yield ')' '{' generatorBody '}'
+  | 'function' '*' '(' formalParameters_Yield ')' '{' generatorBody '}'
   ;
 
 //  GeneratorExpression :
 //   function * BindingIdentifier[Yield]opt ( FormalParameters[Yield] ) { GeneratorBody }
-GeneratorExpression
-  : 'function' '*' BindingIdentifier_Yield? '(' FormalParameters_Yield ')' '{' GeneratorBody '}'
+generatorExpression
+  : 'function' '*' bindingIdentifier_Yield? '(' formalParameters_Yield ')' '{' generatorBody '}'
   ;
 
 //  GeneratorBody :
 //   FunctionBody[Yield]
-GeneratorBody
-  : FunctionBody_Yield
+generatorBody
+  : functionBody_Yield
   ;
 
 //  YieldExpression[In] :
 //   yield
 //   yield [no LineTerminator here] AssignmentExpression[?In, Yield]
 //   yield [no LineTerminator here] * AssignmentExpression[?In, Yield]
-YieldExpression
+yieldExpression
   : 'yield'
-  | 'yield' ~LineTerminator AssignmentExpression_Yield
-  | 'yield' ~LineTerminator '*' AssignmentExpression_Yield
+  | 'yield' ~LineTerminator assignmentExpression_Yield
+  | 'yield' ~LineTerminator '*' assignmentExpression_Yield
   ;
 
-YieldExpression_In
+yieldExpression_In
   : 'yield'
-  | 'yield' ~LineTerminator AssignmentExpression_In_Yield
-  | 'yield' ~LineTerminator '*' AssignmentExpression_In_Yield
+  | 'yield' ~LineTerminator assignmentExpression_In_Yield
+  | 'yield' ~LineTerminator '*' assignmentExpression_In_Yield
   ;
 
 //  ClassDeclaration[Yield, Default] :
 //   class BindingIdentifier[?Yield] ClassTail[?Yield]
 //   [+Default] class ClassTail[?Yield]
-ClassDeclaration
-  : 'class' BindingIdentifier ClassTail
+classDeclaration
+  : 'class' bindingIdentifier classTail
   ;
 
-ClassDeclaration_Yield
-  : 'class' BindingIdentifier_Yield ClassTail_Yield
+classDeclaration_Yield
+  : 'class' bindingIdentifier_Yield classTail_Yield
   ;
 
-ClassDeclaration_Default
-  : 'class' BindingIdentifier ClassTail
-  | 'class' ClassTail
+classDeclaration_Default
+  : 'class' bindingIdentifier classTail
+  | 'class' classTail
   ;
 
-ClassDeclaration_Yield_Default
-  : 'class' BindingIdentifier_Yield ClassTail_Yield
-  | 'class' ClassTail_Yield
+classDeclaration_Yield_Default
+  : 'class' bindingIdentifier_Yield classTail_Yield
+  | 'class' classTail_Yield
   ;
 
 //  ClassExpression[Yield] :
 //   class BindingIdentifier[?Yield]opt ClassTail[?Yield]
-ClassExpression
-  : 'class' BindingIdentifier? ClassTail
+classExpression
+  : 'class' bindingIdentifier? classTail
   ;
 
-ClassExpression_Yield
-  : 'class' BindingIdentifier_Yield? ClassTail_Yield
+classExpression_Yield
+  : 'class' bindingIdentifier_Yield? classTail_Yield
   ;
 
 //  ClassTail[Yield] :
 //   ClassHeritage[?Yield]opt { ClassBody[?Yield]opt }
-ClassTail
-  : ClassHeritage? '{' ClassBody? '}'
+classTail
+  : classHeritage? '{' classBody? '}'
   ;
 
-ClassTail_Yield
-  : ClassHeritage_Yield? '{' ClassBody_Yield? '}'
+classTail_Yield
+  : classHeritage_Yield? '{' classBody_Yield? '}'
   ;
 
 //  ClassHeritage[Yield] :
 //   extends LeftHandSideExpression[?Yield]
-ClassHeritage
-  : 'extends' LeftHandSideExpression
+classHeritage
+  : 'extends' leftHandSideExpression
   ;
 
-ClassHeritage_Yield
-  : 'extends' LeftHandSideExpression_Yield
+classHeritage_Yield
+  : 'extends' leftHandSideExpression_Yield
   ;
 
 //  ClassBody[Yield] :
 //   ClassElementList[?Yield]
-ClassBody
-  : ClassElementList
+classBody
+  : classElementList
   ;
 
-ClassBody_Yield
-  : ClassElementList_Yield
+classBody_Yield
+  : classElementList_Yield
   ;
 
 //  ClassElementList[Yield] :
 //   ClassElement[?Yield]
 //   ClassElementList[?Yield] ClassElement[?Yield]
-ClassElementList
-  : ClassElement
-  | ClassElementList ClassElement
+classElementList
+  : classElement
+  | classElementList classElement
   ;
 
-ClassElementList_Yield
-  : ClassElement_Yield
-  | ClassElementList_Yield ClassElement_Yield
+classElementList_Yield
+  : classElement_Yield
+  | classElementList_Yield classElement_Yield
   ;
 
 //  ClassElement[Yield] :
 //   MethodDefinition[?Yield]
 //   static MethodDefinition[?Yield]
 //   ;
-ClassElement
-  : MethodDefinition
-  | 'static' MethodDefinition
+classElement
+  : methodDefinition
+  | 'static' methodDefinition
   | ';'
   ;
 
-ClassElement_Yield
-  : MethodDefinition_Yield
-  | 'static' MethodDefinition_Yield
+classElement_Yield
+  : methodDefinition_Yield
+  | 'static' methodDefinition_Yield
   | ';'
   ;
 
 //  Script :
 //   ScriptBodyopt
-Script
-  : ScriptBody?
+script
+  : scriptBody?
   ;
 
 //  ScriptBody :
 //   StatementList
-ScriptBody :
-   StatementList;
+scriptBody
+  : statementList;
 
 //  Module :
 //   ModuleBodyopt
-  Module :
-   ModuleBody?;
+module
+  : moduleBody?;
 
 //  ModuleBody :
 //   ModuleItemList
-  ModuleBody :
-   ModuleItemList;
+moduleBody
+  : moduleItemList;
 
 //  ModuleItemList :
 //   ModuleItem
 //   ModuleItemList ModuleItem
-  ModuleItemList :
-   ModuleItem
-  | ModuleItemList ModuleItem;
+moduleItemList
+  : moduleItem
+  | moduleItemList moduleItem;
 
 //  ModuleItem :
 //   ImportDeclaration
 //   ExportDeclaration
 //   StatementListItem
-  ModuleItem :
-   ImportDeclaration
-  | ExportDeclaration
-  | StatementListItem;
+moduleItem
+  : importDeclaration
+  | exportDeclaration
+  | statementListItem;
 
 //  ImportDeclaration :
 //   import ImportClause FromClause ;
 //   import ModuleSpecifier ;
-  ImportDeclaration
-  : 'import' ImportClause FromClause ';'
+importDeclaration
+  : 'import' importClause FromClause ';'
   | 'import' ModuleSpecifier ';'
   ;
 
@@ -2800,32 +2800,32 @@ ScriptBody :
 //   NamedImports
 //   ImportedDefaultBinding , NameSpaceImport
 //   ImportedDefaultBinding , NamedImports
-ImportClause
-  : ImportedDefaultBinding
-  | NameSpaceImport
-  | NamedImports
-  | ImportedDefaultBinding ',' NameSpaceImport
-  | ImportedDefaultBinding ',' NamedImports
+importClause
+  : importedDefaultBinding
+  | nameSpaceImport
+  | namedImports
+  | importedDefaultBinding ',' nameSpaceImport
+  | importedDefaultBinding ',' namedImports
   ;
 
 //  ImportedDefaultBinding :
 //   ImportedBinding
-  ImportedDefaultBinding :
-   ImportedBinding;
+importedDefaultBinding
+  : importedBinding;
 
 //  NameSpaceImport :
 //   * as ImportedBinding
-  NameSpaceImport :
-   '*' 'as' ImportedBinding;
+nameSpaceImport
+  : '*' 'as' importedBinding;
 
 //  NamedImports :
 //   { }
 //   { ImportsList }
 //   { ImportsList , }
-NamedImports
+namedImports
   : '{' '}'
-  | '{' ImportsList '}'
-  | '{' ImportsList ',' '}'
+  | '{' importsList '}'
+  | '{' importsList ',' '}'
   ;
 
 //  FromClause :
@@ -2837,17 +2837,17 @@ FromClause
 //  ImportsList :
 //   ImportSpecifier
 //   ImportsList , ImportSpecifier
-ImportsList
-  : ImportSpecifier
-  | ImportsList ',' ImportSpecifier
+importsList
+  : importSpecifier
+  | importsList ',' importSpecifier
   ;
 
 //  ImportSpecifier :
 //   ImportedBinding
 //   IdentifierName as ImportedBinding
-ImportSpecifier
-  : ImportedBinding
-  | IdentifierName 'as' ImportedBinding
+importSpecifier
+  : importedBinding
+  | IdentifierName 'as' importedBinding
   ;
 
 //  ModuleSpecifier :
@@ -2858,8 +2858,8 @@ ModuleSpecifier
 
 //  ImportedBinding :
 //   BindingIdentifier
-ImportedBinding
-  : BindingIdentifier
+importedBinding
+  : bindingIdentifier
   ;
 
 //  ExportDeclaration :
@@ -2871,33 +2871,33 @@ ImportedBinding
 //   export default HoistableDeclaration[Default]
 //   export default ClassDeclaration[Default]
 //   export default [lookahead ∉ { function, class }] AssignmentExpression[In] ;
-ExportDeclaration
+exportDeclaration
   : 'export' '*' FromClause ';'
-  | 'export' ExportClause FromClause ';'
-  | 'export' ExportClause ';'
-  | 'export' VariableStatement
-  | 'export' Declaration
-  | 'export' 'default' HoistableDeclaration_Default
-  | 'export' 'default' ClassDeclaration_Default
-  | 'export' 'default' {(_input.LA(1) != 'function') && (_input.LA(1) != 'class')}? AssignmentExpression_In ';'
+  | 'export' exportClause FromClause ';'
+  | 'export' exportClause ';'
+  | 'export' variableStatement
+  | 'export' declaration
+  | 'export' 'default' hoistableDeclaration_Default
+  | 'export' 'default' classDeclaration_Default
+  | 'export' 'default' {(_input.LA(1) != 'function') && (_input.LA(1) != 'class')}? assignmentExpression_In ';'
   ;
 
 //  ExportClause :
 //   { }
 //   { ExportsList }
 //   { ExportsList , }
-ExportClause
+exportClause
   : '{' '}'
-  | '{' ExportsList '}'
-  | '{' ExportsList ',' '}'
+  | '{' exportsList '}'
+  | '{' exportsList ',' '}'
   ;
 
 //  ExportsList :
 //   ExportSpecifier
 //   ExportsList , ExportSpecifier
-ExportsList
+exportsList
   : ExportSpecifier
-  | ExportsList ',' ExportSpecifier
+  | exportsList ',' ExportSpecifier
   ;
 
 //  ExportSpecifier :
